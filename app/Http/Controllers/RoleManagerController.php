@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Role;
+use App\Models\RoleGroup;
+use App\Models\RoleList;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+
+class RoleManagerController extends Controller
+{
+    public function index()
+    {
+        return Inertia::render('user/role/index', [
+            'role' => Role::all(),
+            'role_group' => RoleGroup::all(),
+            'role_list' => RoleList::all(),
+        ]);
+    }
+    public function saveRole(Request $request)
+    {
+        if (request()->ajax()) {
+            $features = RoleList::all();
+            foreach ($features as $feature) {
+                if ($request->has('permissions.' . $feature->slug)) {
+                    $name = $feature->slug;
+
+                    foreach ($request['permissions'][$name] as $cap) {
+                        $permissions[$name][] = $cap;
+                    }
+                }
+            }
+            $array = [
+                'created_by' => Auth::user()->Password_ID,
+                'role_name' => $request->rolename,
+                'permission' => json_encode($permissions),
+            ];
+            Role::create($array);
+        }
+    }
+
+    public function listofRoles($group_id)
+    {
+        return response()->json(RoleList::where('group_id', $group_id)->get());
+    }
+}

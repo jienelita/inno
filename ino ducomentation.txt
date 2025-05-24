@@ -1,0 +1,29 @@
+npm install antd --save
+
+npm install lodash.debounce
+
+npm install framer-motion
+
+npm install react-apexcharts apexcharts
+npm install react-signature-canvas
+npm install react-webcam
+npm install @inertiajs/inertia
+npm install cropperjs react-cropper
+npm install react-cropper cropperjs react-easy-crop
+npm install pdf-lib
+npm install file-saver
+npm install dayjs
+npm install axios
+
+
+
+--app account
+lesbethmaea@gmail.com
+Lesbeth28 
+
+
+composer require barryvdh/laravel-dompdf
+
+--admin access
+Florconde30@gmail.com
+Errolflynn07

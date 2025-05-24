@@ -50,8 +50,8 @@ export default function AdminForm({ onClose }: Props) {
                 },
             }
         );
-        // reset();
-        // onClose();
+        reset();
+        onClose();
     };
 
     const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {

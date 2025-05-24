@@ -43,6 +43,10 @@ class RoleManagerController extends Controller
 
     public function listofRoles($group_id)
     {
-        return response()->json(RoleList::where('group_id', $group_id)->get());
+        if ($group_id > 0) {
+            return response()->json(RoleList::where('group_id', $group_id)->get());
+        } else {
+            return response()->json(Role::all());
+        }
     }
 }

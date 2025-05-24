@@ -30,7 +30,8 @@ class User extends Authenticatable
         "permanent_address",
         "is_admin",
         "name",
-        "otp"
+        "otp",
+        "is_active"
     ];
 
     /**

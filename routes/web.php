@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/save-role', [RoleManagerController::class, 'saveRole']);
         Route::get('/list-of-roles/{group_id}', [RoleManagerController::class, 'listofRoles']);
         Route::post('/save-user', [UserManagerController::class, 'saveUser']);
+        Route::get('/role-list/{group_id}', [RoleManagerController::class, 'listofRoles']);
     });
 
     Route::get('test', [LoanController::class, 'test']);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Role;
 use App\Models\RoleGroup;
 use App\Models\RoleList;
+use App\Models\RoleUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -48,5 +49,11 @@ class RoleManagerController extends Controller
         } else {
             return response()->json(Role::all());
         }
+    }
+
+    public function UserAssignRole($userID){
+
+        return response()->json(RoleUser::Join('role', 'role.id', 'role_user.roles_id')->where('role_user.user_id', $userID)->get());
+
     }
 }

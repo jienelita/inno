@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
+use App\Models\RoleGroup;
+use App\Models\RoleList;
 use App\Models\RolePermission;
 use App\Models\RoleUser;
 use App\Models\User;
@@ -18,7 +20,10 @@ class UserManagerController extends Controller
     public function index()
     {
         return Inertia::render('user/user-manager', [
-            'user_list' => User::selectraw('users.id as user_id, users.*')->where('is_admin', '>', 0)->get()
+            'user_list' => User::selectraw('users.id as user_id, users.*')->where('is_admin', '>', 0)->get(),
+            'role' => Role::all(),
+            'role_group' => RoleGroup::all(),
+            'role_list' => RoleList::all(),
         ]);
     }
     public function loanManager()
@@ -73,6 +78,9 @@ class UserManagerController extends Controller
             'reason' => $res,
             'disable_by' => $name,
         ]);
+    }
+    public function UpdateUserRole($userid, Request $request){
+        dd($request);
     }
     public function saveUser(Request $request)
     {

@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout'
 import { Head, router, Link } from '@inertiajs/react'
 import { type BreadcrumbItem } from '@/types';
-import { Button, Drawer, Dropdown, Form, Input, message, Modal,  Space, Table, TableColumnsType, Tag, Tooltip } from 'antd';
+import { Button, Drawer, Dropdown, Form, Input, message, Modal, Space, Table, TableColumnsType, Tag, Tooltip } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { AdminuserStatus, isAdminCode, userStatus } from '@/lib/helpers';
 import { useState } from 'react';
@@ -9,6 +9,7 @@ import { Lock, LucideUserRoundCog, PencilIcon, Plus } from 'lucide-react';
 import '@ant-design/v5-patch-for-react-19';
 import type { MenuInfo } from 'rc-menu/lib/interface';
 import AdminForm from '@/components/user/adminForm';
+import AssignUserRole from '@/components/user/assignUserRole';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -45,7 +46,21 @@ interface DataType {
     email: string;
     is_admin: number
 }
-function UserManager({ user_list }: Props) {
+interface Role {
+    id: number;
+    role_name: string;
+    created_at: string;
+    permission: string;
+}
+interface RoleGroup {
+    group_name: string;
+    id: number;
+}
+interface Props {
+    role: Role[];
+    role_group: RoleGroup[];
+}
+function UserManager({ user_list, role_group }: Props) {
     const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
     const [isDisableModalVisible, setIsDisableModalVisible] = useState(false);
     const [disableReason, setDisableReason] = useState('');
@@ -145,8 +160,8 @@ function UserManager({ user_list }: Props) {
             render: (_, record) => (
                 <>
                     {record.is_admin == 2 && (
-                        <Tooltip title="Assign User Role">
-                            <Button color="purple" variant="text" icon={<LucideUserRoundCog />} size="middle" className='me-1' />
+                        <Tooltip title="Update User Role">
+                            <Button color="purple" variant="text" icon={<LucideUserRoundCog />} size="middle" className='me-1'  onClick={() => showAssignDrawer(record.user_id)} />
                         </Tooltip>
                     )}
                     <Tooltip title="Change Password">
@@ -172,11 +187,24 @@ function UserManager({ user_list }: Props) {
         />
     );
     const [open, setOpen] = useState(false);
+    const [assignOpen, setAssignOpen] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+
     const showDrawer = () => {
         setOpen(true);
     };
     const onClose = () => {
         setOpen(false);
+    };
+
+
+    const showAssignDrawer = (userId: number) => {
+        setSelectedUserId(userId);
+        setAssignOpen(true);
+    };
+    const onAssignDrawerClose = () => {
+        setAssignOpen(false);
+         setSelectedUserId(null); 
     };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -250,7 +278,21 @@ function UserManager({ user_list }: Props) {
                     },
                 }}
             >
-              <AdminForm onClose={onClose}  />
+                <AdminForm onClose={onClose} />
+            </Drawer>
+
+            <Drawer
+                title="Update Assign Role"
+                width={720}
+                onClose={onAssignDrawerClose}
+                open={assignOpen}
+                styles={{
+                    body: {
+                        paddingBottom: 80,
+                    },
+                }}
+            >
+                 <AssignUserRole onClose={onClose} userId={selectedUserId} role_group={role_group} />
             </Drawer>
         </AppLayout>
     )

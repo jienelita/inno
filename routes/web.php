@@ -47,6 +47,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/list-of-roles/{group_id}', [RoleManagerController::class, 'listofRoles']);
         Route::post('/save-user', [UserManagerController::class, 'saveUser']);
         Route::get('/role-list/{group_id}', [RoleManagerController::class, 'listofRoles']);
+        Route::get('/user-role-assign/{group_id}', [RoleManagerController::class, 'UserAssignRole']);
+        Route::post('/update-user-assign-role/{user_id}', [UserManagerController::class, 'UpdateUserRole']);
     });
 
     Route::get('test', [LoanController::class, 'test']);

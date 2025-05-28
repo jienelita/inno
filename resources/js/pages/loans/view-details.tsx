@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { getStatusTag, loanCodeMap, loanTerms, modeMap, statusFilterOptions, statusOptions, tagLabels } from '@/lib/helpers';
+import { getStatusTag, loanCodeMap, loanTerms, modeMap, permissionMap, statusFilterOptions, statusOptions, tagLabels } from '@/lib/helpers';
 import { Avatar, Button, ConfigProviderProps, Drawer, Dropdown, Image, message, Modal, Space, Tag } from 'antd';
 import { DownloadOutlined, DownOutlined, UserOutlined } from '@ant-design/icons';
 import ImageFreeCropModal from '@/lib/ImageFreeCropModal';
@@ -12,6 +12,7 @@ import { PDFDocument, rgb } from 'pdf-lib';
 import { saveAs } from 'file-saver'; // optional for nicer file download
 import TextArea from 'antd/es/input/TextArea';
 import UserInformation from '@/components/user/userInformation';
+import { usePermission } from '@/hooks/usePermission';
 
 //import { DownloadOutlined, Crop } from '@ant-design/icons';
 const breadcrumbs = [
@@ -96,6 +97,7 @@ interface UserType {
     email_verified_at: string;
 }
 export default function ViewDetails({ details, documents, img_data, approve_by }: Props) {
+
     const loandetails = JSON.parse(details.loan_details);
     const { tagColor, statusText } = getStatusTag(details.status);
     const [easyCropVisible, setEasyCropVisible] = useState(false);
@@ -262,6 +264,14 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
         setOpen(false);
         setSelectedUser(null);
     };
+    const { hasPermission } = usePermission();
+    const filteredStatusOptions = statusOptions?.filter((item) => {
+        const perm = permissionMap[item.key];
+        if (perm) {
+            return hasPermission(perm[0], perm[1]);
+        }
+        return true;
+    });
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Loan Details" />
@@ -310,32 +320,36 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
                             </button>
                         </div>
                     </div>
-                    {user.is_admin == 3 && (
-                        <>
+                    {/* {user.is_admin == 3 && ( */}
+                    <>
+                        {hasPermission('members-section', 'edit') && (
                             <Link href={`/member/${details.user_id}`} className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto">
                                 <svg className="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill=""></path>
                                 </svg>
                                 Edit
                             </Link>
+                        )}
+                        {hasPermission('members-section', 'view') && (
                             <button onClick={() => showDrawer(details)} className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"  >
                                 <svg className="fill-current" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path  d="M3.5 12C3.5 7.30558 7.30558 3.5 12 3.5C16.6944 3.5 20.5 7.30558 20.5 12C20.5 16.6944 16.6944 20.5 12 20.5C7.30558 20.5 3.5 16.6944 3.5 12ZM12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM11.0991 7.52507C11.0991 8.02213 11.5021 8.42507 11.9991 8.42507H12.0001C12.4972 8.42507 12.9001 8.02213 12.9001 7.52507C12.9001 7.02802 12.4972 6.62507 12.0001 6.62507H11.9991C11.5021 6.62507 11.0991 7.02802 11.0991 7.52507ZM12.0001 17.3714C11.5859 17.3714 11.2501 17.0356 11.2501 16.6214V10.9449C11.2501 10.5307 11.5859 10.1949 12.0001 10.1949C12.4143 10.1949 12.7501 10.5307 12.7501 10.9449V16.6214C12.7501 17.0356 12.4143 17.3714 12.0001 17.3714Z" fill=""></path>
+                                    <path d="M3.5 12C3.5 7.30558 7.30558 3.5 12 3.5C16.6944 3.5 20.5 7.30558 20.5 12C20.5 16.6944 16.6944 20.5 12 20.5C7.30558 20.5 3.5 16.6944 3.5 12ZM12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM11.0991 7.52507C11.0991 8.02213 11.5021 8.42507 11.9991 8.42507H12.0001C12.4972 8.42507 12.9001 8.02213 12.9001 7.52507C12.9001 7.02802 12.4972 6.62507 12.0001 6.62507H11.9991C11.5021 6.62507 11.0991 7.02802 11.0991 7.52507ZM12.0001 17.3714C11.5859 17.3714 11.2501 17.0356 11.2501 16.6214V10.9449C11.2501 10.5307 11.5859 10.1949 12.0001 10.1949C12.4143 10.1949 12.7501 10.5307 12.7501 10.9449V16.6214C12.7501 17.0356 12.4143 17.3714 12.0001 17.3714Z" fill=""></path>
                                 </svg>
                                 View
                             </button>
-                        </>
-                    )}
+                        )}
+                    </>
+                    {/* )} */}
                 </div>
             </div>
-            {user.is_admin === 3 && (
+            {user.is_admin > 0 && (
                 <div className="px-4 pt-4">
                     <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
 
                         <div className="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
                             <Dropdown
                                 menu={{
-                                    items: statusOptions,
+                                    items: filteredStatusOptions,
                                     onClick: handleMenuClick(details.id),
                                 }}
                                 trigger={['click']}>
@@ -485,7 +499,7 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
                                     </h3>
                                     <Image width={400} src={`/images/${doc.image_name}`} alt={tagLabels[doc.image_mapping]} />
                                     {/* This section will crop image */}
-                                    {user.is_admin == 3 && (
+                                    {hasPermission('loan-manager', 'crop') &&  (
                                         <>
                                             {doc.image_mapping === 3 ? (
                                                 <Button size="large"
@@ -506,7 +520,7 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
                                 </div>
                             ))}
                             {/* This section will open modal for crop image */}
-                            {user.is_admin == 3 && (
+                            {user.is_admin > 0 && (
                                 <>
                                     <ImageFreeCropModal
                                         visible={freeCropVisible}

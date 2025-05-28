@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout'
-import { Head, router, Link } from '@inertiajs/react'
+import { Head, router, Link, usePage } from '@inertiajs/react'
 import { type BreadcrumbItem } from '@/types';
 import { Button, Drawer, Dropdown, Input, message, Modal, Space, Table, TableColumnsType, Tag } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
@@ -9,6 +9,7 @@ import { Eye, PencilIcon } from 'lucide-react';
 import UserInformation from '@/components/user/userInformation';
 import '@ant-design/v5-patch-for-react-19';
 import type { MenuInfo } from 'rc-menu/lib/interface';
+import { usePermission } from '@/hooks/usePermission';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -76,7 +77,17 @@ interface UserType {
     name: string;
     email_verified_at: string;
 }
-
+type User = {
+    id: number;
+    name: string;
+    email: string;
+    is_admin: number;
+};
+type PageProps = {
+    auth: {
+        user: User;
+    };
+};
 function index({ user_list }: Props) {
     const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
     const [open, setOpen] = useState(false);
@@ -84,6 +95,8 @@ function index({ user_list }: Props) {
     const [isDisableModalVisible, setIsDisableModalVisible] = useState(false);
     const [disableReason, setDisableReason] = useState('');
     const [pendingStatusChange, setPendingStatusChange] = useState<{ id: number; status: number } | null>(null);
+    const { props } = usePage<PageProps>();
+    const user = props.auth.user;
     const showDrawer = (user: UserType) => {
         setSelectedUser(user);
         setOpen(true);
@@ -146,16 +159,19 @@ function index({ user_list }: Props) {
 
                 return (
                     <Space size="middle">
+                        {user.is_admin == 1 || user.is_admin == 3 && ( 
                         <Dropdown menu={dynamicMenu}>
                             <a onClick={(e) => e.preventDefault()}>
                                 More <DownOutlined />
                             </a>
                         </Dropdown>
+                        )}
                     </Space>
                 );
             },
         },
     ];
+    const { hasPermission } = usePermission();
     const handleStatusChange = async (id: number, status: number, reason?: string) => {
         try {
             router.post(
@@ -196,8 +212,12 @@ function index({ user_list }: Props) {
             key: 'operation',
             render: (_, record) => (
                 <>
-                    <Button color="cyan" variant="text" icon={<Eye />} size="middle" className='me-1' onClick={() => showDrawer(record)} />
-                    <Link href={`member/${record.key}`}><Button type="link" icon={<PencilIcon />} size="small" /></Link>
+                    {hasPermission('members-section', 'view') && (
+                        <Button color="cyan" variant="text" icon={<Eye />} size="middle" className='me-1' onClick={() => showDrawer(record)} />
+                    )}
+                    {hasPermission('members-section', 'edit') && (
+                        <Link href={`member/${record.key}`}><Button type="link" icon={<PencilIcon />} size="small" /></Link>
+                    )}
                 </>
             )
         }

@@ -6,6 +6,7 @@ import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { BookCheck, BookOpen, Calculator, CalendarClock, Cog, Folder, HandCoins, LayoutGrid, List, PiggyBank, Shield, User, UserCog, UserCog2Icon, Users } from 'lucide-react';
 import AppLogo from './app-logo';
+import { usePermission } from '@/hooks/usePermission';
 
 type User = {
     id: number;
@@ -23,7 +24,7 @@ type PageProps = {
 export function AppSidebar() {
     const { props } = usePage<PageProps>();
     const user = props.auth.user;
-
+    const { hasPermission } = usePermission();
     const mainNavItems = [
         {
 
@@ -56,20 +57,24 @@ export function AppSidebar() {
 
         ...(user.is_admin === 3 || user.is_admin === 2
             ? [
-                {
-                    title: 'Members',
-
-                    href: '/members',
-                    icon: Users,
-                },
+                // Conditionally add Members menu
+                ...(hasPermission('members-section', 'view')
+                    ? [{
+                        title: 'Members',
+                        href: '/members',
+                        icon: Users,
+                    }]
+                    : []
+                ),
+                // Always add Loan Manager
                 {
                     title: 'Loan Manager',
-
                     href: '/loan-manager',
                     icon: List,
                 },
             ]
-            : []),
+            : []
+        ),
 
 
 

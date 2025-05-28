@@ -72,7 +72,6 @@ export default function AdminForm({ onClose }: Props) {
         fetchImage();
     }, []);
 
-    console.log(roleList);
 
     return (
         <>

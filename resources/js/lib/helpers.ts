@@ -120,21 +120,21 @@ export const AdminuserStatus: Record<number, { label: string; color: string }> =
 };
 
 export const formatDateTime = (value: string | Date): string => {
-  return new Date(value).toLocaleString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+    return new Date(value).toLocaleString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 };
 
 export const formatDate = (value: string | Date): string => {
-  return new Date(value).toLocaleString('en-GB', {
-    month: 'short',
-    day: '2-digit',
-    year: 'numeric'
-  });
+    return new Date(value).toLocaleString('en-GB', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric'
+    });
 };
 
 export const isAdminCode: Record<number, string> = {
@@ -143,4 +143,12 @@ export const isAdminCode: Record<number, string> = {
     2: 'Loan Section',
     3: 'Administrator',
     //	0 = user, 1 = membership, 2 = loansection, 3 = admin	
+};
+
+
+export const permissionMap = {
+    '0': ['loan-manager', 'pending'],
+    '1': ['loan-manager', 'approved'],
+    '2': ['loan-manager', 'disapproved'],
+    '3': ['loan-manager', 'validated'],
 };

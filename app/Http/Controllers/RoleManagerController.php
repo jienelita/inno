@@ -52,8 +52,8 @@ class RoleManagerController extends Controller
     }
 
     public function UserAssignRole($userID){
-
         return response()->json(RoleUser::Join('role', 'role.id', 'role_user.roles_id')->where('role_user.user_id', $userID)->get());
-
     }
+
+   
 }

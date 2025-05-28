@@ -77,9 +77,7 @@ class LoanController extends Controller
                     break;
             }
         }
-
         $loan = $query->paginate(20)->withQueryString();
-
         return Inertia::render('loans/loan-manager', [
             'loan' => $loan,
         ]);
@@ -146,17 +144,17 @@ class LoanController extends Controller
         if ($get) {
             $avatar = UserImages::where('user_id', $get->user_id)->where('image_tag', 1)->first();
             $img = 'avatar.jpg';
-            if($avatar){
+            if ($avatar) {
                 $img = $avatar->image_name;
             }
             $signature = UserImages::where('loan_id', $get->id)->where('image_mapping', 4)->first();
             $signa = '';
-            if($signature){
+            if ($signature) {
                 $signa = $signature->image_name;
             }
             $details = json_decode($get->loan_details);
             $originalDate = new DateTime(date('Y-m-d'));
-            $originalDate->modify('+'.$details->term.' months');
+            $originalDate->modify('+' . $details->term . ' months');
             $data = [
                 'name' => $get->name,
                 'contact' => $get->phone_number,
@@ -177,9 +175,9 @@ class LoanController extends Controller
             ];
         }
 
-       // return view('promisory-note')->with($data);
+        // return view('promisory-note')->with($data);
         $pdf = Pdf::loadView('promisory-note', $data)->setPaper('a4', 'portrait');
-        return $pdf->download($get->name.'-'.$data['loanCode'].'-'.$data['loanCode'].'.pdf');
+        return $pdf->download($get->name . '-' . $data['loanCode'] . '-' . $data['loanCode'] . '.pdf');
     }
 
     public function viewLoanDetails($id)
@@ -378,7 +376,12 @@ class LoanController extends Controller
     public function test()
     {
         // echo str_replace('/images/', '', '');
-        echo str_replace("/images/", "", "/images/1745824894magrow-id.jpg");
+        //echo str_replace("/images/", "", "/images/1745824894magrow-id.jpg");
+        //hasPermission('os-product-list', 'create');
+        echo '<pre>';
+        $permission = session()->all();
+        $permissions = $permission['user_role'];
+        print_r($permissions);
     }
     private function loadCode($loanCode)
     {
@@ -493,8 +496,9 @@ class LoanController extends Controller
                 return 'Weekly';
         };
     }
-    private function Interest($loan_code){
-        switch($loan_code){
+    private function Interest($loan_code)
+    {
+        switch ($loan_code) {
             case 1:
                 return 24; //net cash
             case 2:

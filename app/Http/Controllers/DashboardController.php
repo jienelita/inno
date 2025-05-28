@@ -11,6 +11,11 @@ class DashboardController extends Controller
 {
     public function dashboard()
     {
+    //     $role = session()->all();
+    //    echo '<pre>';
+    //     print_r($role);
+    //     echo '</pre>';
+    //     die();
         return Inertia::render('dashboard', [
             'user' => User::find(Auth::user()->id)
         ]);

@@ -99,7 +99,7 @@ export default function RoleComponents({ onClose, role_group }: RoleComponentsPr
           const items = roles.map((role) => {
             const itemWithStatus = role.with_status === 1;
             const perms = itemWithStatus
-              ? ['view', 'edit', 'create', 'delete', 'pending', 'approved', 'disapproved', 'validated']
+              ? ['view', 'edit', 'create', 'delete', 'pending', 'approved', 'disapproved', 'validated', 'crop']
               : ['view', 'edit', 'create', 'delete'];
             return {
               key: String(role.id),

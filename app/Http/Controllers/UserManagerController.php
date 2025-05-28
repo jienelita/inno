@@ -79,8 +79,41 @@ class UserManagerController extends Controller
             'disable_by' => $name,
         ]);
     }
-    public function UpdateUserRole($userid, Request $request){
-        dd($request);
+    public function UpdateUserRole(Request $request)
+    {
+        if (is_array($request['values']['role'])) {
+            $userID = $request['userId'];
+            RolePermission::where('user_id', $userID)->delete();
+            RoleUser::where('user_id', $userID)->delete();
+            foreach ($request['values']['role'] as $roleId) {
+                RoleUser::create([
+                    'user_id' => $userID,
+                    'roles_id' => $roleId,
+                ]);
+                $role = Role::find($roleId);
+                if ($role) {
+                    $rolePermissions = json_decode($role->permission);
+                    foreach ($rolePermissions as $key => $permissions) {
+                        foreach ($permissions as $value) {
+                            if (!RolePermission::where('user_id', $userID)->where('feature_id', $key)->where('capability', $value)->exists()) {
+                                $permission = new RolePermission();
+                                $permission->user_id = $userID;
+                                $permission->role_id = $role->id;
+                                $permission->feature_id = $key;
+                                $permission->capability = $value;
+                                $permission->save();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    public function UpdatePassword(Request $request){
+        $arr = [
+            'password' => Hash::make($request->pass),
+        ];
+        User::where('id', $request->userId)->update($arr);
     }
     public function saveUser(Request $request)
     {

@@ -1,4 +1,3 @@
-
 import { router, useForm } from '@inertiajs/react';
 import { Button, Checkbox, Collapse, Divider, Form, Input, message, Spin, Typography } from 'antd';
 import type { CheckboxProps, FormProps } from 'antd';
@@ -6,11 +5,9 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 const { Title } = Typography;
 const { Panel } = Collapse;
-
 type FieldType = {
   roleName?: string;
 };
-
 interface Role {
   id: number;
   name: string;
@@ -19,7 +16,6 @@ interface Role {
   permission: string;
 }
 type RoleList = Role[];
-
 interface RoleGroup {
   group_name: string;
   id: number;
@@ -28,16 +24,14 @@ interface RoleComponentsProps {
   userId: number | null;
   role_group: RoleGroup[];
   onClose: () => void;
+  resetFormKey: number;
 }
-
-
-export default function AssignUserRole({ userId, role_group, onClose }: RoleComponentsProps) {
+export default function AssignUserRole({ userId, role_group, onClose, resetFormKey }: RoleComponentsProps) {
   const [loadingGroup, setLoadingGroup] = useState<number | null>(null);
   const [rolesByGroup, setRolesByGroup] = useState<Record<number, Role[]>>({});
-
   const [form] = Form.useForm<FieldType>();
   const { reset } = useForm({});
-
+  const [roleList, setRoleList] = useState<RoleList | null>(null);
   const onFinish = (values: any) => {
     router.post(
       `/update-user-assign-role/${userId}`,
@@ -60,9 +54,7 @@ export default function AssignUserRole({ userId, role_group, onClose }: RoleComp
   const onFinishFailed: FormProps<FieldType>['onFinishFailed'] = (errorInfo) => {
     console.log('Failed:', errorInfo);
   };
-
   const fetchRoles = async (groupId: number) => {
-
     setLoadingGroup(groupId);
     try {
       const response = await axios.get(`/list-of-roles/${groupId}`);
@@ -73,21 +65,19 @@ export default function AssignUserRole({ userId, role_group, onClose }: RoleComp
       setLoadingGroup(null);
     }
   };
-
+  useEffect(() => {
+    form.resetFields();
+  }, [resetFormKey]);
   useEffect(() => {
     role_group.forEach((group) => {
       fetchRoles(group.id);
     });
   }, []);
-
-  const [roleList, setRoleList] = useState<RoleList | null>(null);
-
   useEffect(() => {
     if (userId === null) {
       setRoleList(null);
       return;
     }
-
     const fetchAssignRoles = async () => {
       try {
         const res = await fetch(`/user-role-assign/${userId}`);
@@ -97,51 +87,49 @@ export default function AssignUserRole({ userId, role_group, onClose }: RoleComp
         console.error('Error fetching roles:', err);
       }
     };
-
     fetchAssignRoles();
   }, [userId]);
-
-  // useEffect(() => {
-  //   if (roleList) {
-  //     const parsed = roleList.map((listrole) => {
-  //       try {
-  //         return JSON.parse(listrole.permission);
-  //       } catch (e) {
-  //         return null;
-  //       }
-  //     });
-  //     setParsedPermissions(parsed);
-  //   }
-  // }, [roleList]);
-
-
-
+  useEffect(() => {
+    if (!roleList) return;
+    const permissions: Record<string, string[]> = {};
+    roleList.forEach((listrole) => {
+      try {
+        const parsed = JSON.parse(listrole.permission);
+        Object.entries(parsed).forEach(([slug, perms]) => {
+          permissions[slug] = perms as string[];
+        });
+      } catch (e) {
+        console.error('Failed to parse permissions', e);
+      }
+    });
+    setInitialPermissionValues({ permissions });
+  }, [roleList]);
+  const [initialPermissionValues, setInitialPermissionValues] = useState({});
+  useEffect(() => {
+    if (form && initialPermissionValues && Object.keys(initialPermissionValues).length > 0) {
+      form.setFieldsValue(initialPermissionValues);
+    }
+  }, [initialPermissionValues, form]);
 
   return (
     <>
-
       <Form
         form={form}
-        name="basic"
-        initialValues={{ remember: true }}
+        initialValues={initialPermissionValues}
         onFinish={onFinish}
         onFinishFailed={onFinishFailed}
         autoComplete="off"
       >
-
+        
         {role_group.map((group) => {
           const groupId = group.id ?? group.id;
           const roles = rolesByGroup[groupId] || [];
-
           const items = roles.map((role) => {
             const itemWithStatus = role.with_status === 1;
             const perms = itemWithStatus
-              ? ['view', 'edit', 'create', 'delete', 'pending', 'approved', 'disapproved', 'validated']
+              ? ['view', 'edit', 'create', 'delete', 'pending', 'approved', 'disapproved', 'validated', 'crop']
               : ['view', 'edit', 'create', 'delete'];
-
-            // Find matchedPermissions for this role.slug
             let matchedPermissions: string[] = [];
-
             roleList?.forEach((listrole) => {
               try {
                 const parsed = JSON.parse(listrole.permission);
@@ -152,30 +140,18 @@ export default function AssignUserRole({ userId, role_group, onClose }: RoleComp
                 console.error('Invalid JSON in permission', e);
               }
             });
-
             return {
               key: String(role.id),
               label: role.name,
               children: (
                 <>
-                  <Form.Item
-                    name={['permissions', role.slug]}
-                    className="!mb-0"
-                  >
+                  <Form.Item name={['permissions', role.slug]} className="!mb-0">
                     <Checkbox.Group>
                       <div className="grid grid-cols-4 gap-2">
                         {perms.map((perm) => (
-                          <>
-                            <div key={perm}>
-                              <input
-                                type="checkbox"
-                                value={perm}
-                                checked={matchedPermissions?.includes(perm)}
-                                readOnly // prevents React warning for uncontrolled input
-                              />{' '}
-                              {perm.charAt(0).toUpperCase() + perm.slice(1)}
-                            </div>
-                          </>
+                          <Checkbox key={perm} value={perm}>
+                            {perm.charAt(0).toUpperCase() + perm.slice(1)}
+                          </Checkbox>
                         ))}
                       </div>
                     </Checkbox.Group>
@@ -221,16 +197,3 @@ export default function AssignUserRole({ userId, role_group, onClose }: RoleComp
     </>
   );
 }
-
-
-{/* <Form.Item name={['permissions', role.slug]} className="!mb-0">
-                      <Checkbox.Group defaultValue={matchedPermissions}>
-                        <div className="grid grid-cols-4 gap-2">
-                          {perms.map((perm) => (
-                            <Checkbox key={perm} value={perm}>
-                              {perm.charAt(0).toUpperCase() + perm.slice(1)}
-                            </Checkbox>
-                          ))}
-                        </div>
-                      </Checkbox.Group>
-                    </Form.Item> */}

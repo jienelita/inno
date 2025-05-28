@@ -1,5 +1,4 @@
 <?php
-
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\LoanController;
@@ -10,8 +9,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
-
-use function Pest\Laravel\delete;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -33,22 +30,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::middleware(['auth', 'is_admin'])->group(function () {
-        Route::get('user-manager', [UserManagerController::class, 'index']);
-        Route::get('loan-manager', [LoanController::class, 'loanManager']);
-        Route::get('promisory-note/{loanId}', [LoanController::class, 'promisorynote']);
-        Route::post('loan-update-status/{statusID}/{loanID}', [LoanController::class, 'loanUpdateStatus']);
+        Route::get('user-manager', [UserManagerController::class, 'index']);        
+        
         Route::post('loan-update-reason/{loanID}', [LoanController::class, 'loanUpdateReason']);
-        Route::get('member/{user_id}', [UserManagerController::class, 'updateUser']);
-        Route::get('members', [UserManagerController::class, 'membersList']);
-        Route::post('/user-manager/update-status', [UserManagerController::class, 'UpdateUserStatus']);
-        Route::get('/user-manager/profile-image/{id}', [UserManagerController::class, 'getProfile']);
+        
         Route::get('/role-manager', [RoleManagerController::class, 'index']);
         Route::post('/save-role', [RoleManagerController::class, 'saveRole']);
         Route::get('/list-of-roles/{group_id}', [RoleManagerController::class, 'listofRoles']);
         Route::post('/save-user', [UserManagerController::class, 'saveUser']);
         Route::get('/role-list/{group_id}', [RoleManagerController::class, 'listofRoles']);
         Route::get('/user-role-assign/{group_id}', [RoleManagerController::class, 'UserAssignRole']);
-        Route::post('/update-user-assign-role/{user_id}', [UserManagerController::class, 'UpdateUserRole']);
+        Route::post('/update-user-assign-role', [UserManagerController::class, 'UpdateUserRole']);
+        Route::post('/user-password-update', [UserManagerController::class, 'UpdatePassword']);
+    });
+
+    Route::middleware(['auth', 'is_admin_or_loan'])->group(function () {
+        Route::get('members', [UserManagerController::class, 'membersList']);
+        Route::get('loan-manager', [LoanController::class, 'loanManager']);
+        Route::get('member/{user_id}', [UserManagerController::class, 'updateUser']);
+        Route::post('/user-manager/update-status', [UserManagerController::class, 'UpdateUserStatus']);
+        Route::get('/user-manager/profile-image/{id}', [UserManagerController::class, 'getProfile']);
+        Route::post('loan-update-status/{statusID}/{loanID}', [LoanController::class, 'loanUpdateStatus']);
+        Route::get('promisory-note/{loanId}', [LoanController::class, 'promisorynote']);
     });
 
     Route::get('test', [LoanController::class, 'test']);

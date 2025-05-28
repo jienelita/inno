@@ -5,10 +5,12 @@ import { Head, useForm, usePage, Link } from '@inertiajs/react';
 import { Button, Dropdown, message, Modal, Popconfirm, Table, Tag, Tooltip } from 'antd';
 import type { TableColumnsType, TableProps } from 'antd';
 import '@ant-design/v5-patch-for-react-19';
-import { getLoanCodeFilters, modeMap, getStatusTag, loanCode, statusOptions, statusFilterOptions } from '@/lib/helpers'
+import { getLoanCodeFilters, modeMap, getStatusTag, loanCode, statusOptions, statusFilterOptions, permissionMap } from '@/lib/helpers'
 import { Eye, Trash2 } from 'lucide-react';
 import { DownOutlined } from '@ant-design/icons';
 import TextArea from 'antd/es/input/TextArea';
+import { usePermission } from '@/hooks/usePermission';
+
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Loans',
@@ -44,10 +46,11 @@ type PageProps = {
         user: User;
     };
 };
+
+
 export default function Index() {
     const { props } = usePage<PageProps>();
     const user = props.auth.user;
-    //const { post, get } = useForm();
     const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
     const [reasonText, setReasonText] = useState('');
     const { loan } = usePage().props as unknown as {
@@ -136,6 +139,16 @@ export default function Index() {
         text: name,
         value: user_id,
     }));
+
+    const { hasPermission } = usePermission();
+    const filteredStatusOptions = statusOptions?.filter((item) => {
+        const perm = permissionMap[item.key];
+        if (perm) {
+            return hasPermission(perm[0], perm[1]);
+        }
+        return true;
+    });
+
     const columns: TableColumnsType<LoanRecord> = [
         {
             title: 'ID',
@@ -234,12 +247,17 @@ export default function Index() {
                         });
                     }
                 };
+                const menuProps = {
+                    items: filteredStatusOptions,
+                    onClick: handleMenuClick(record.id),
+                };
                 return (
                     <Dropdown
-                        menu={{
-                            items: statusOptions,
-                            onClick: handleMenuClick(record.id),
-                        }}
+                        // menu={{
+                        //     items: statusOptions,
+                        //     onClick: handleMenuClick(record.id),
+                        // }}
+                        menu={menuProps}
                         trigger={['click']}>
                         <Button
                             size="small"
@@ -292,26 +310,29 @@ export default function Index() {
                 <>
                     <div className='flex '>
                         <Link href={`/loan/view/${record.id}`} className="text-link cursor-auto"><Eye className='w-5 h-5 me-2'></Eye></Link>
-                        <span className='cursor-pointer'>
-                            <Popconfirm
-                                title="Delete the loan"
-                                description="Are you sure you want to delete this loan?"
-                                onConfirm={() => confirmDelete(record.id)}
-                                onCancel={cancelDelete}
-                                okText="Yes"
-                                cancelText="No"
-                                placement="topRight"
-                                disabled={record.status === 1}>
-                                <Tooltip title={record.status === 1 ? 'Cannot delete approved loan' : ''}>
-                                    <Trash2 className='w-5 h-5 text-amber-800'></Trash2>
-                                </Tooltip>
-                            </Popconfirm>
-                        </span>
+                        {user.is_admin === 3 && (
+                            <span className='cursor-pointer'>
+                                <Popconfirm
+                                    title="Delete the loan"
+                                    description="Are you sure you want to delete this loan?"
+                                    onConfirm={() => confirmDelete(record.id)}
+                                    onCancel={cancelDelete}
+                                    okText="Yes"
+                                    cancelText="No"
+                                    placement="topRight"
+                                    disabled={record.status === 1}>
+                                    <Tooltip title={record.status === 1 ? 'Cannot delete approved loan' : ''}>
+                                        <Trash2 className='w-5 h-5 text-amber-800'></Trash2>
+                                    </Tooltip>
+                                </Popconfirm>
+                            </span>
+                        )}
                     </div>
                 </>
             ),
         },
     ];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Loans" />

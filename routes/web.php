@@ -45,17 +45,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
     });
 
-    Route::middleware(['auth', 'is_admin_or_loan'])->group(function () {
+    Route::middleware(['auth', 'is_admin_or_any'])->group(function () {
         Route::post('loan-update-reason/{loanID}/{status}', [LoanController::class, 'loanUpdateReason']);
-        Route::get('members', [UserManagerController::class, 'membersList']);
-        Route::get('loan-manager', [LoanController::class, 'loanManager']);
-        Route::get('member/{user_id}', [UserManagerController::class, 'updateUser']);
+        Route::get('/members', [UserManagerController::class, 'membersList']);
+        Route::get('/loan-manager', [LoanController::class, 'loanManager']);
+        Route::get('/member/{user_id}', [UserManagerController::class, 'updateUser']);
         Route::post('/user-manager/update-status', [UserManagerController::class, 'UpdateUserStatus']);
         Route::get('/user-manager/profile-image/{id}', [UserManagerController::class, 'getProfile']);
-        Route::post('loan-update-status/{statusID}/{loanID}', [LoanController::class, 'loanUpdateStatus']);
-        Route::post('update-accounting/{loanid}/{status}', [LoanController::class, 'UpdateAccountingDeny']);
-        Route::get('promisory-note/{loanId}', [LoanController::class, 'promisorynote']);
+        Route::post('/loan-update-status/{statusID}/{loanID}', [LoanController::class, 'loanUpdateStatus']);
+        Route::post('/update-accounting/{loanid}/{status}', [LoanController::class, 'UpdateAccountingDeny']);
+        Route::post('/user-manager/member-status', [UserManagerController::class, 'UpdateMemberStatus']);
         
+        Route::get('/promisory-note/{loanId}', [LoanController::class, 'promisorynote']);
     });
 
     Route::get('test', [LoanController::class, 'test']);

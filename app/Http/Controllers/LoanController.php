@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AccountBalance;
 use App\Models\LoanApplication;
 use App\Models\LoanLog;
+use App\Models\User;
 use App\Models\UserImages;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DateTime;
@@ -146,8 +147,8 @@ class LoanController extends Controller
     {
         return Inertia::render('loans/calculator', [
             'account_balance' => AccountBalance::where('user_id', Auth::user()->id)->first(),
-            'gallery' => UserImages::where('user_id', Auth::user()->id)->where('show_img', 1)->get()
-        ]);
+            'gallery' => UserImages::where('user_id', Auth::user()->id)->where('show_img', 1)->get(),
+            'user' => User::find(Auth::user()->id),        ]);
     }
 
     public function delete($id)

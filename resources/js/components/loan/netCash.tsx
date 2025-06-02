@@ -12,8 +12,12 @@ type Props = {
     net_cash: string;
   };
   gallery?: { image_name: string; image_path: string }[];
+  userinfo?: {
+    status: number;
+    is_active: number;
+  }
 };
-export default function NetCash({ balance, gallery }: Props) {
+export default function NetCash({ balance, gallery, userinfo }: Props) {
   const [loanAmount, setLoanAmount] = useState<number>(0);
   const [proceeds, setProceeds] = useState<number | null>(null);
   const [interest, setInterest] = useState<number>(0);
@@ -122,7 +126,7 @@ export default function NetCash({ balance, gallery }: Props) {
       </>,
     },
   ];
-  console.log(balance);
+
   return (
     <>
       <div className="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">
@@ -145,7 +149,10 @@ export default function NetCash({ balance, gallery }: Props) {
         </div>
         <div className="flex items-start w-full gap-3 sm:justify-end ">
           <div className="inline-flex w-fit items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900">
-            <Button type="primary" onClick={NetcashModal} >Make Calculation Now</Button>
+            
+            {(userinfo?.status === 1 && userinfo?.is_active === 3 ) && (
+              <Button type="primary" onClick={NetcashModal} >Make Calculation Now</Button>
+            )}
           </div>
         </div>
       </div>

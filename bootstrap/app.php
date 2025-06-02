@@ -26,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'is_membership' => \App\Http\Middleware\IsMembership::class,
         'is_loansection' => \App\Http\Middleware\IsLoanSection::class,
         'is_admin' => \App\Http\Middleware\IsAdmin::class,
-        'is_admin_or_loan' => \App\Http\Middleware\IsAdminOrLoanSection::class,
+        'is_admin_or_any' => \App\Http\Middleware\IsAdminOrAnySection::class,
        // \App\Http\Middleware\ShareInertiaData::class,
     ]);
     })

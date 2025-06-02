@@ -47,30 +47,12 @@ export const AplLoanTerms: Record<number, string> = {
     3: '3 Months',
     4: '4 Months',
 };
+
 export const loanTermModePayment = {
     1: 'Weekly',
     2: 'Semi - monthly',
     3: 'Monthly',
     4: 'Quarterly',
-};
-
-// resources/js/lib/helpers.ts
-
-export const getStatusTag = (status: number): { tagColor: string; statusText: string } => {
-    switch (status) {
-        case 0:
-            return { tagColor: 'gold', statusText: 'Pending' };
-        case 1:
-            return { tagColor: 'green', statusText: 'Approved' };
-        case 2:
-            return { tagColor: 'red', statusText: 'Disapproved' };
-        case 3:
-            return { tagColor: 'green', statusText: 'Validated' };
-        case 4:
-            return { tagColor: 'red', statusText: 'Reject' };
-        default:
-            return { tagColor: 'default', statusText: 'Unknown' };
-    }
 };
 
 export const tagLabels: { [key: number]: string } = {
@@ -82,66 +64,6 @@ export const tagLabels: { [key: number]: string } = {
     6: 'Co-Maker Magrow ID',
     7: 'Co-maker Valid ID'
 };
-
-export const statusOptions: MenuProps['items'] = [
-    {
-        key: '0',
-        label: 'Pending',
-    },
-    {
-        key: '1',
-        label: 'Approved',
-    },
-    {
-        key: '2',
-        label: 'Disapproved',
-    },
-    {
-        key: '3',
-        label: 'Validated',
-    },
-    {
-        key: '4',
-        label: 'Reject',
-    },
-];
-
-export const AccstatusOptions: MenuProps['items'] = [
-    {
-        key: '0',
-        label: 'Select Status',
-    },
-    {
-        key: '1',
-        label: 'Pre - Approved',
-    },
-    {
-        key: '2',
-        label: 'Deny',
-    }
-];
-
-export const AccountingstatusOptions = (status: number): { colorTagging: string; statusAccText: string } => {
-   switch (status) {
-        case 0:
-            return { colorTagging: 'gold', statusAccText: 'Select Status' };
-        case 1:
-            return { colorTagging: 'green', statusAccText: 'Pre - Approved' };
-        case 2:
-            return { colorTagging: 'red', statusAccText: 'Deny' };
-        default:
-            return { colorTagging: 'default', statusAccText: 'Unknown' };
-    }
-}
-
-
-export const statusFilterOptions = [
-    { text: 'Pending', value: 0 },
-    { text: 'Approved', value: 1 },
-    { text: 'Disapproved', value: 2 },
-    { text: 'Validated', value: 3 },
-    { text: 'Reject', value: 3 }
-];
 
 export const userStatus: Record<number, { label: string; color: string }> = {
     0: { label: 'Inactive Account', color: 'default' },          // gray
@@ -181,21 +103,31 @@ export const isAdminCode: Record<number, string> = {
     //	0 = user, 1 = membership, 2 = loansection, 3 = admin	
 };
 
+export function getPermissions(withStatus: number | boolean): string[] {
+    const basePermissions = ['view', 'edit', 'create', 'delete'];
+    let extraPermissions = [
+            'pending',
+            'approved',
+            'disapproved',
+            'validated',
+            'disbursements',
+            'reject',
+            'pre-approved',
+            'deny',
+            'crop',
+        ];
+    if (withStatus === 2) {
+        extraPermissions = [
+            'pending',
+            'approved',
+            'disapproved'
+        ];
+    }
 
-export const permissionMap: Record<string, string[]> = {
-    '0': ['loan-manager', 'pending'],
-    '1': ['loan-manager', 'approved'],
-    '2': ['loan-manager', 'disapproved'],
-    '3': ['loan-manager', 'validated'],
-    '4': ['loan-manager', 'reject'],
-};
+    return withStatus ? [...basePermissions, ...extraPermissions] : basePermissions;
+}
 
-
-export const accpermissionMap: Record<string, string[]> = {
-    '1': ['loan-manager', 'pre-approved'],
-    '2': ['loan-manager', 'deny'],
-};
-
+// for LOAN STATUS SECTION
 
 export const statusColor = (status: number) => {
     switch (status) {
@@ -209,7 +141,155 @@ export const statusColor = (status: number) => {
             return 'blue';
         case 4:
             return 'orange';
+        case 5:
+            return 'green';
         default:
             return 'default';
+    }
+};
+
+export const permissionMap: Record<string, string[]> = {
+    '0': ['loan-manager', 'pending'],
+    '1': ['loan-manager', 'approved'],
+    '2': ['loan-manager', 'disapproved'],
+    '3': ['loan-manager', 'validated'],
+    '4': ['loan-manager', 'reject'],
+    '5': ['loan-manager', 'disbursements'],
+};
+
+export const permissionMemberMap: Record<string, string[]> = {
+    '0': ['members-section', 'pending'],
+    '1': ['members-section', 'approved'],
+    '2': ['members-section', 'disapproved'],
+};
+
+export const statusFilterOptions = [
+    { text: 'Pending', value: 0 },
+    { text: 'Approved', value: 1 },
+    { text: 'Disapproved', value: 2 },
+    { text: 'Validated', value: 3 },
+    { text: 'Reject', value: 4 },
+    { text: 'Disbursements', value: 5 }
+];
+
+export const getStatusTag = (status: number): { tagColor: string; statusText: string } => {
+    switch (status) {
+        case 0:
+            return { tagColor: 'gold', statusText: 'Pending' };
+        case 1:
+            return { tagColor: 'green', statusText: 'Approved' };
+        case 2:
+            return { tagColor: 'red', statusText: 'Disapproved' };
+        case 3:
+            return { tagColor: 'green', statusText: 'Validated' };
+        case 4:
+            return { tagColor: 'red', statusText: 'Reject' };
+        case 5:
+            return { tagColor: 'green', statusText: 'Disbursements' };
+        default:
+            return { tagColor: 'default', statusText: 'Unknown' };
+    }
+};
+
+export const statusOptions: MenuProps['items'] = [
+    {
+        key: '0',
+        label: 'Pending',
+    },
+    {
+        key: '1',
+        label: 'Approved',
+    },
+    {
+        key: '2',
+        label: 'Disapproved',
+    },
+    {
+        key: '3',
+        label: 'Validated',
+    },
+    {
+        key: '4',
+        label: 'Reject',
+    },
+    {
+        key: '5',
+        label: 'Disbursements',
+    },
+];
+
+export const AccstatusOptions: MenuProps['items'] = [
+    {
+        key: '0',
+        label: 'Select Status',
+    },
+    {
+        key: '1',
+        label: 'Pre - Approved',
+    },
+    {
+        key: '2',
+        label: 'Deny',
+    }
+];
+
+export const accpermissionMap: Record<string, string[]> = {
+    '1': ['loan-manager', 'pre-approved'],
+    '2': ['loan-manager', 'deny'],
+};
+
+export const AccountingstatusOptions = (status: number): { colorTagging: string; statusAccText: string } => {
+    switch (status) {
+        case 0:
+            return { colorTagging: 'gold', statusAccText: 'Select Status' };
+        case 1:
+            return { colorTagging: 'green', statusAccText: 'Pre - Approved' };
+        case 2:
+            return { colorTagging: 'red', statusAccText: 'Deny' };
+        default:
+            return { colorTagging: 'default', statusAccText: 'Unknown' };
+    }
+}
+
+export const memberStatus: Record<number, { label: string; color: string }> = {
+    0: {
+        label: 'Pending',
+        color: 'default'
+    },
+    1: {
+        label: 'Approve',
+        color: 'green'
+    },
+    2: {
+        label: 'Disapprove',
+        color: 'error'
+    }
+};
+
+export const memberOptions: MenuProps['items'] = [
+    {
+        key: '0',
+        label: 'Pending',
+    },
+    {
+        key: '1',
+        label: 'Approved',
+    },
+    {
+        key: '2',
+        label: 'Disapproved',
+    }
+
+];
+export const membertatusTag = (status: number): { tagColor: string; statusText: string } => {
+    switch (status) {
+        case 0:
+            return { tagColor: 'gold', statusText: 'Pending' };
+        case 1:
+            return { tagColor: 'green', statusText: 'Approved' };
+        case 2:
+            return { tagColor: 'red', statusText: 'Disapproved' };
+        default:
+            return { tagColor: 'default', statusText: 'Unknown' };
     }
 };

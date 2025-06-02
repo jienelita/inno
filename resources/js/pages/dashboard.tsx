@@ -10,15 +10,18 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/dashboard',
     },
 ];
-
-const Dashboard = () => {
+type Props = {
+      disaproved_res: string;
+};
+const Dashboard = ({ disaproved_res }: Props) => {
     const props = usePage().props as {
         user?: {
             id: number;
             name: string;
             email: string;
             email_verified_at: string;
-            is_active: number;
+            status: number;
+            is_active: number; 
         }
     };
     const user = props.user;
@@ -29,7 +32,7 @@ const Dashboard = () => {
                 {user?.email_verified_at === null && (
                     <EmailVerification title='Verify your email address.' children='Please verify your email address.' showDetails={true} />
                 )}
-                <UserStatus data={user} />
+                <UserStatus data={user}  reason={disaproved_res} />
                 
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
                     <div className="border-sidebar-border/70 dark:border-sidebar-border relative  overflow-hidden rounded-xl border">

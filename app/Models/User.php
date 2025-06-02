@@ -31,7 +31,8 @@ class User extends Authenticatable
         "is_admin",
         "name",
         "otp",
-        "is_active"
+        "is_active",
+        "status"
     ];
 
     /**

@@ -55,18 +55,25 @@ export function AppSidebar() {
             ]
             : []),
 
+        //...(user.is_admin === 3 || user.is_admin === 2
+        // ? [
+
+
+         // ]
+        //  : []
+        //  ),
+        
+        ...(hasPermission('members-section', 'view')
+            ? [{
+                title: 'Members',
+                href: '/members',
+                icon: Users,
+            }]
+            : []
+        ),
+
         ...(user.is_admin === 3 || user.is_admin === 2
             ? [
-                // Conditionally add Members menu
-                ...(hasPermission('members-section', 'view')
-                    ? [{
-                        title: 'Members',
-                        href: '/members',
-                        icon: Users,
-                    }]
-                    : []
-                ),
-                // Always add Loan Manager
                 {
                     title: 'Loan Manager',
                     href: '/loan-manager',
@@ -76,7 +83,9 @@ export function AppSidebar() {
             : []
         ),
 
-
+        // ]
+        //  : []
+        //   ),
 
     ];
 

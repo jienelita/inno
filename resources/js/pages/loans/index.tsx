@@ -95,7 +95,7 @@ export default function Index() {
             replace: true,
             onSuccess: (page) => {
                 const res = page.props as any;
-                console.log(res);
+                
                 if (res.status === 1) {
                     message.error(`${res.message}`);
                 } else {

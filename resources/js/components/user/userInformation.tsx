@@ -15,12 +15,15 @@ interface Props {
     is_active: number;
     email: string;
     email_verified_at: string;
+    status: number;
   };
 }
 interface UserMoreInfo {
   image_name: string;
   reason: string;
   disable_by: string;
+  disaproved_by: string;
+  disaproved_res: string;
 }
 export default function UserInformation({ user }: Props) {
   const [moreIfo, setMoreInfo] = useState<UserMoreInfo | null>(null);
@@ -88,6 +91,23 @@ export default function UserInformation({ user }: Props) {
           )}
         </>
       )}
+      {user.status === 2 && (
+        <>
+          {moreIfo?.disaproved_res !== '' && (
+            <>
+              <div className={`mt-3 transition-opacity duration-500 opacity-100 space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10`}>
+                <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
+                  <div>
+                    <span  className="font-medium">Disaproved by:</span> {moreIfo?.disaproved_by}<br />
+                    <span  className="font-medium">Reason:</span> {moreIfo?.disaproved_res}<br />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      )}
+
       <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6 mt-2">
         <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-3 ">Personal Information</h4>
         <Row className='mt-0'>

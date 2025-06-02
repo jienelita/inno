@@ -27,9 +27,9 @@ function loanLog($status, $loan_id, $reason = '', $isaccounting = 1)
     if ($reason != '') {
         $text = '<br /> Reason: ' . $reason;
     }
-    $logmessage = auth()->user()->name . ' (' . auth()->user()->id . ') set status to <span class="' . statusReturn($status)['color'] . '">' . statusReturn($status)['text'] . '</span><br />' . $date . ' ' . $text;
+        $logmessage = auth()->user()->name . ' (' . auth()->user()->id . ') set status to <span class="' . statusReturn($status)['color'] . '">' . statusReturn($status)['text'] . '</span>.<br />' . $date . ' ' . $text;
     if ($isaccounting == 2) {
-        $logmessage = auth()->user()->name . ' (' . auth()->user()->id . ') set status to <span class="' . accountingReturn($status)['color'] . '">' . accountingReturn($status)['text'] . '</span><br />' . $date . ' ' . $text.'<br/> Department: Accounting ';
+        $logmessage = auth()->user()->name . ' (' . auth()->user()->id . ') set status to <span class="' . accountingReturn($status)['color'] . '">' . accountingReturn($status)['text'] . '</span>.<br />' . $date . ' ' . $text.'<br/> Department: Accounting ';
     }
     $arr = [
         'log_message' => $logmessage,
@@ -65,6 +65,8 @@ function statusReturn($status)
             return ['text' => 'Validated', 'color' => 'text-blue-600'];
         case 4:
             return ['text' => 'Reject', 'color' => 'text-orange-600'];
+        case 5:
+            return ['text' => 'Disbursements', 'color' => 'text-green-600'];
         default:
             return ['text' => 'Unknown', 'color' => ''];
     }

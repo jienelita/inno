@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm, usePage, Link } from '@inertiajs/react';
-import { Button, Dropdown, message, Modal, Popconfirm, Table, Tag, Tooltip } from 'antd';
+import { Alert, Button, Dropdown, message, Modal, Popconfirm, Table, Tag, Tooltip } from 'antd';
 import type { TableColumnsType, TableProps } from 'antd';
 import '@ant-design/v5-patch-for-react-19';
 import { getLoanCodeFilters, modeMap, getStatusTag, loanCode, statusOptions, statusFilterOptions, permissionMap } from '@/lib/helpers'
@@ -34,6 +34,7 @@ interface LoanRecord {
     name: string;
     payment_mode: string;
     user_id: number;
+    acc_status: number;
 }
 type User = {
     id: number;
@@ -227,7 +228,7 @@ export default function Index() {
                 const isWarning = tagColor === 'gold';  // Pending
                 const handleMenuClick = (loanId: number) => (e: any) => {
                     const newStatus = parseInt(e.key);
-                     if (newStatus === 2 || newStatus === 4) {
+                    if (newStatus === 2 || newStatus === 4) {
                         //setSelectedLoanId(loanId);
                         setSelectedLoan({ loanId, status: newStatus });
                         setIsDisapproveModalOpen(true);
@@ -251,26 +252,58 @@ export default function Index() {
                     items: filteredStatusOptions,
                     onClick: handleMenuClick(record.id),
                 };
+                
+                const canShowDropdown =
+                    (hasPermission('loan-manager', 'approved') &&
+                        hasPermission('loan-manager', 'disapproved')) ||
+                    user.is_admin === 3 ||
+                    record.status !== 2;
+
+                const shouldShowDropdown =
+                    user.is_admin === 3 || // ✅ force show dropdown for admin
+                    (record.status > 0 && record.acc_status > 0) ||
+                    (!hasPermission('loan-manager', 'approved') &&
+                        !hasPermission('loan-manager', 'disapproved'));
+
+                const showSuccessTagInstead =
+                    record.status === 1 &&
+                    !hasPermission('loan-manager', 'approved') &&
+                    user.is_admin !== 3; // ✅ don't show success tag for admin
+
                 return (
                     <>
-                        {record.status !== 2 ? (
-                            <Dropdown
-                                menu={menuProps}
-                                trigger={['click']}>
-                                <Button
-                                    size="small"
-                                    type={!isWarning && !isDanger ? 'primary' : 'default'} // Primary only for Approved
-                                    danger={isDanger}
-                                    className={
-                                        isWarning ? 'bg-yellow-400 text-black border-none hover:bg-yellow-500' : ''
-                                    }>
-                                    {statusText}
-                                    <DownOutlined />
-                                </Button>
-                            </Dropdown>
-                        ) : (
+                        {(filteredStatusOptions?.length ?? 0) > 0 && (
                             <>
-                                <Tag color='red'>{statusText}</Tag>
+                                {canShowDropdown ? (
+                                    showSuccessTagInstead ? (
+                                        <Tag color="success">{statusText}</Tag>
+                                    ) : shouldShowDropdown ? (
+                                        <Dropdown
+                                            menu={{ items: filteredStatusOptions, onClick: handleMenuClick(record.id) }}
+                                            trigger={['click']}
+                                        >
+                                            <Button
+                                                size="small"
+                                                type={!isWarning && !isDanger ? 'primary' : 'default'}
+                                                danger={isDanger}
+                                                className={isWarning ? 'bg-yellow-400 text-black border-none hover:bg-yellow-500' : ''}
+                                            >
+                                                {statusText} <DownOutlined />
+                                            </Button>
+                                        </Dropdown>
+                                    ) : (
+                                        <Alert
+                                            type="error"
+                                            message={
+                                                record.status === 0
+                                                    ? 'Pending, please wait for validation'
+                                                    : 'Validated but not yet confirmed from accounting'
+                                            }
+                                        />
+                                    )
+                                ) : (
+                                    <Tag color={tagColor}>{statusText}</Tag>
+                                )}
                             </>
                         )}
                     </>

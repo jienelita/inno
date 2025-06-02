@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 
-class IsAdminOrLoanSection
+class IsAdminOrAnySection
 {
     public function handle($request, Closure $next)
     {
@@ -16,8 +16,8 @@ class IsAdminOrLoanSection
         }
 
         $role = Auth::user()->is_admin;
-        if (!in_array($role, [2, 3])) {
-            // Assuming 1 = admin, 3 = loan section
+        if (!in_array($role, [1, 2, 3])) {
+            //1 = admin, 3 = loan section
             abort(403, 'Access denied.');
         }
 

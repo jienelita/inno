@@ -110,6 +110,7 @@ interface UserType {
     email: string;
     name: string;
     email_verified_at: string;
+    status: number
 }
 export default function ViewDetails({ details, documents, img_data, approve_by, checkby, logfile }: Props) {
     console.log(logfile);
@@ -348,12 +349,15 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
         details.status !== 2;
 
     const shouldShowDropdown =
+        user.is_admin === 3 || // ✅ force show dropdown for admin
         (details.status > 0 && details.acc_status > 0) ||
         (!hasPermission('loan-manager', 'approved') &&
             !hasPermission('loan-manager', 'disapproved'));
 
     const showSuccessTagInstead =
-        details.status === 1 && !hasPermission('loan-manager', 'approved');
+        details.status === 1 &&
+        !hasPermission('loan-manager', 'approved') &&
+        user.is_admin !== 3; // ✅ don't show success tag for admin
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Loan Details" />
@@ -401,7 +405,6 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
                             </button>
                         </div>
                     </div>
-                    {/* {user.is_admin == 3 && ( */}
                     <>
                         {hasPermission('members-section', 'edit') && (
                             <Link href={`/member/${details.user_id}`} className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto">
@@ -420,7 +423,6 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
                             </button>
                         )}
                     </>
-                    {/* )} */}
                 </div>
             </div>
             {user.is_admin > 0 && (
@@ -590,7 +592,8 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
 
                             </>
                         )}
-                        {details.status !== 4 && (
+                        
+                        {(details.status !== 4 && details.check_by > 0) && (
                             <>
                                 {details.acc_status > 0 && (
                                     <>
@@ -659,9 +662,6 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
                                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
                                     Documents Uploaded
                                 </h3>
-                                {/* <p className="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
-                                    Target you’ve set for each month
-                                </p> */}
                             </div>
 
                             <div className="inline-flex items-center gap-0.5 ">

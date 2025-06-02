@@ -1,3 +1,4 @@
+import { getPermissions } from '@/lib/helpers';
 import { router, useForm } from '@inertiajs/react';
 import { Alert, Button, Checkbox, Collapse, Divider, Form, Input, message, Spin, Typography } from 'antd';
 import type { CheckboxProps, FormProps } from 'antd';
@@ -133,10 +134,7 @@ export default function UpdateRole({ roleId, role_group, onClose, resetFormKey }
           const groupId = group.id ?? group.id;
           const roles = rolesByGroup[groupId] || [];
           const items = roles.map((role) => {
-            const itemWithStatus = role.with_status === 1;
-            const perms = itemWithStatus
-              ? ['view', 'edit', 'create', 'delete', 'pending', 'approved', 'disapproved', 'validated', 'reject' , 'pre-approved', 'deny' ,'crop']
-              : ['view', 'edit', 'create', 'delete'];
+            const perms = getPermissions(role.with_status);
             return {
               key: String(role.id),
               label: role.name,
@@ -144,7 +142,7 @@ export default function UpdateRole({ roleId, role_group, onClose, resetFormKey }
                 <>
                   <Form.Item name={['permissions', role.slug]} className="!mb-0">
                     <Checkbox.Group>
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-5 gap-2">
                         {perms.map((perm) => (
                           <Checkbox key={perm} value={perm}>
                             {perm.charAt(0).toUpperCase() + perm.slice(1)}

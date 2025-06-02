@@ -29,6 +29,7 @@ interface RoleGroup {
 interface Props {
     role: Role[];
     role_group: RoleGroup[];
+    roleid: number;
 }
 interface DataType {
     key: React.Key;
@@ -37,8 +38,11 @@ interface DataType {
     created_at: string;
     permission: string;
 }
-interface CountList{
+interface CountList {
 
+}
+interface UserCountCellProps {
+  roleid: number; // or `string` if roleid is a string
 }
 function roleIndex({ role, role_group }: Props) {
     const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
@@ -70,9 +74,9 @@ function roleIndex({ role, role_group }: Props) {
         permission: role.permission,
         created_at: role.created_at,
     }));
-
-    const UserCountCell = ({ roleid }) => {
+    const UserCountCell: React.FC<UserCountCellProps> = ({ roleid }) => {
         const [countList, setUserCount] = useState<CountList>([]);
+
         useEffect(() => {
             const fetchAssignRoles = async () => {
                 try {
@@ -85,25 +89,22 @@ function roleIndex({ role, role_group }: Props) {
             };
             fetchAssignRoles();
         }, [roleid]);
-        return (
-            <>
-               {countList} 
-            </>
-        );
-    }
 
+        return <>{countList}</>;
+    };
     const columns: TableColumnsType<DataType> = [
         { title: 'ID', dataIndex: 'id', key: 'id' },
         { title: 'Role Name', dataIndex: 'role_name', key: 'role_name' },
-        { title: 'User Assign', key: 'user_assign',
-            render: (_, record) => {                
+        {
+            title: 'User Assign', key: 'user_assign',
+            render: (_, record) => {
                 return (
                     <>
-                         <UserCountCell roleid={record.id} /> 
+                        <UserCountCell roleid={record.id} />
                     </>
                 );
             },
-         },
+        },
         {
             title: 'Created At',
             dataIndex: 'created_at',

@@ -1,9 +1,9 @@
 import AppLayout from '@/layouts/app-layout'
-import { Head, router, Link, usePage } from '@inertiajs/react'
+import { Head, router, Link, usePage, useForm } from '@inertiajs/react'
 import { type BreadcrumbItem } from '@/types';
 import { Button, Drawer, Dropdown, Input, message, Modal, Space, Table, TableColumnsType, Tag } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
-import { formatDate, formatDateTime, userStatus } from '@/lib/helpers';
+import { formatDate, formatDateTime, memberOptions, memberStatus, membertatusTag, permissionMemberMap, statusOptions, userStatus } from '@/lib/helpers';
 import { useState } from 'react';
 import { Eye, PencilIcon } from 'lucide-react';
 import UserInformation from '@/components/user/userInformation';
@@ -31,6 +31,7 @@ interface Props {
         current_address: string;
         permanent_address: string;
         is_active: number;
+        status: number;
         email: string;
         email_verified_at: string;
     }[];
@@ -56,6 +57,7 @@ interface DataType {
     current_address: string;
     permanent_address: string;
     is_active: number;
+    status: number;
     created_at: string;
     user_id: number;
     email: string;
@@ -73,6 +75,7 @@ interface UserType {
     current_address: string;
     permanent_address: string;
     is_active: number;
+    status: number;
     email: string;
     name: string;
     email_verified_at: string;
@@ -95,6 +98,9 @@ function index({ user_list }: Props) {
     const [isDisableModalVisible, setIsDisableModalVisible] = useState(false);
     const [disableReason, setDisableReason] = useState('');
     const [pendingStatusChange, setPendingStatusChange] = useState<{ id: number; status: number } | null>(null);
+    const [memberStatusChange, setMemberStatusChange] = useState<{ id: number; status: number } | null>(null);
+    const [isMemberModalVisible, setMemberModalVisible] = useState(false);
+    const [disapprovedReason, setDisapprovedReason] = useState('');
     const { props } = usePage<PageProps>();
     const user = props.auth.user;
     const showDrawer = (user: UserType) => {
@@ -120,18 +126,21 @@ function index({ user_list }: Props) {
         permanent_address: user.permanent_address,
         is_active: user.is_active,
         email: user.email,
-        email_verified_at: user.email_verified_at
+        email_verified_at: user.email_verified_at,
+        status: user.status
     }));
 
+
     const expandColumns: TableColumnsType<ExpandedDataType> = [
-        { title: 'Birth Place', dataIndex: 'birth_place', key: 'birth_place' },
+        // { title: 'Birth Place', dataIndex: 'birth_place', key: 'birth_place' },
         { title: 'Current Address', dataIndex: 'current_address', key: 'current_address' },
         { title: 'Permanent Address', dataIndex: 'permanent_address', key: 'permanent_address' },
         {
             title: 'Submitted at', dataIndex: 'created_at', key: 'created_at',
             render: (value) => formatDateTime(value)
         },
-        {
+
+        { //this section should be admin area only.
             title: 'Action',
             key: 'operation',
             render: (_, record) => {
@@ -144,11 +153,9 @@ function index({ user_list }: Props) {
                             </span>
                         ),
                     })),
-                    // onClick: ({ key }: MenuInfo) => handleStatusChange(record.id, Number(key)),
                     onClick: ({ key }: MenuInfo) => {
                         const selectedStatus = Number(key);
                         if (selectedStatus === 2) {
-                            // 2 = Disabled Account
                             setPendingStatusChange({ id: record.id, status: selectedStatus });
                             setIsDisableModalVisible(true);
                         } else {
@@ -159,17 +166,18 @@ function index({ user_list }: Props) {
 
                 return (
                     <Space size="middle">
-                        {user.is_admin == 1 || user.is_admin == 3 && ( 
-                        <Dropdown menu={dynamicMenu}>
-                            <a onClick={(e) => e.preventDefault()}>
-                                More <DownOutlined />
-                            </a>
-                        </Dropdown>
+                        {user.is_admin == 1 || user.is_admin == 3 && (
+                            <Dropdown menu={dynamicMenu}>
+                                <a onClick={(e) => e.preventDefault()}>
+                                    More <DownOutlined />
+                                </a>
+                            </Dropdown>
                         )}
                     </Space>
                 );
             },
         },
+
     ];
     const { hasPermission } = usePermission();
     const handleStatusChange = async (id: number, status: number, reason?: string) => {
@@ -189,23 +197,73 @@ function index({ user_list }: Props) {
             message.error('Something went wrong');
         }
     };
-
+    const handleMemberStatusChange = async (id: number, status: number, reason?: string) => {
+        try {
+            router.post(
+                '/user-manager/member-status',
+                { id, status, reason },
+                {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        message.success('Status updated!');
+                    },
+                }
+            );
+        } catch (error) {
+            console.error(error);
+            message.error('Something went wrong');
+        }
+    };
+    const filteredMemberOptions = memberOptions?.filter((item) => {
+        const perm = permissionMemberMap[String(item?.key)];
+        console.log(perm);
+        if (perm) {
+            return hasPermission(perm[0], perm[1]);
+        }
+        return true;
+    });
     const columns: TableColumnsType<DataType> = [
+        { title: 'ID', dataIndex: 'user_id', key: 'user_id' },
         { title: 'CID', dataIndex: 'cid', key: 'cid' },
         { title: 'Name', dataIndex: 'name', key: 'name' },
         { title: 'Email', dataIndex: 'email', key: 'email' },
-        {
-            title: 'Birth Date', dataIndex: 'bithdate', key: 'bithdate',
-            render: (value) => formatDate(value)
-        },
         { title: 'Phone Number', dataIndex: 'phone_number', key: 'phone_number' },
         {
-            title: 'Status', dataIndex: 'is_active', key: 'is_active',
-            render: (value) => (
-                <>
-                    <Tag color={`${userStatus[value].color}`}>{userStatus[value].label}</Tag>
-                </>
-            ),
+            title: 'Status', dataIndex: 'status', key: 'status',
+            render: (_, record) => {
+                const { statusText, tagColor } = membertatusTag(record.status);
+                const isDanger = tagColor === 'red';    // Disapproved
+                const isWarning = tagColor === 'gold';  // Pending
+                const handleMenuClick = (userid: number) => (e: any) => {
+                    const newStatus = parseInt(e.key);
+                    if (newStatus === 2) {
+                        setMemberStatusChange({ id: userid, status: newStatus });
+                        setMemberModalVisible(true);
+                    } else {
+                        handleMemberStatusChange(userid, newStatus, '');
+                    }
+                };
+                return (
+                    <>
+                        <Dropdown
+                            menu={{
+                                items: filteredMemberOptions,
+                                onClick: handleMenuClick(record.user_id)
+                            }}
+                            trigger={['click']}
+                        >
+                            <Button
+                                size="small"
+                                type={!isWarning && !isDanger ? 'primary' : 'default'}
+                                danger={isDanger}
+                                className={isWarning ? 'bg-yellow-400 text-black border-none hover:bg-yellow-500' : ''}
+                            >
+                                {statusText} <DownOutlined />
+                            </Button>
+                        </Dropdown>
+                    </>
+                );
+            },
         },
         {
             title: 'Action',
@@ -306,6 +364,38 @@ function index({ user_list }: Props) {
                     rows={4}
                     value={disableReason}
                     onChange={(e) => setDisableReason(e.target.value)}
+                    placeholder="Enter reason here..."
+                />
+            </Modal>
+            <Modal
+                title="Disapproved reason"
+                open={isMemberModalVisible}
+                onOk={() => {
+                    if (!disapprovedReason.trim()) {
+                        return message.error('Please provide a reason.');
+                    }
+
+                    if (memberStatusChange) {
+                        handleMemberStatusChange(memberStatusChange.id, memberStatusChange.status, disapprovedReason);
+                    }
+
+                    setMemberModalVisible(false);
+                    setDisapprovedReason('');
+                    setMemberStatusChange(null);
+                }}
+                onCancel={() => {
+                    setMemberModalVisible(false);
+                    setDisapprovedReason('');
+                    setMemberStatusChange(null);
+                }}
+                okText="Confirm"
+                cancelText="Cancel"
+            >
+                <p>Please provide a reason for disapproval:</p>
+                <Input.TextArea
+                    rows={4}
+                    value={disapprovedReason}
+                    onChange={(e) => setDisapprovedReason(e.target.value)}
                     placeholder="Enter reason here..."
                 />
             </Modal>

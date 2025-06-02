@@ -24,6 +24,10 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 export default function Calculator() {
     const props = usePage().props as {
+        user?:{
+            status: number;
+            is_active: number;
+        };
         account_balance?: {
             id: number;
             cid: string;
@@ -35,12 +39,12 @@ export default function Calculator() {
     };
     const account_balance = props.account_balance;
     const gallery = props.gallery;
-
+    const user = props.user;
     const items: TabsProps['items'] = [
         {
             key: '1',
             label: 'Net Cash',
-            children: <NetCash balance={account_balance} gallery={gallery} />,
+            children: <NetCash balance={account_balance} gallery={gallery} userinfo={user} />,
             
         },
         {
@@ -53,22 +57,6 @@ export default function Calculator() {
             label: 'APL (CA)',
             children: <Apl balance={account_balance} gallery={gallery} />,
         },
-        // {
-        //     key: '4',
-        //     label: 'Appliance Loan',
-        //     children: <ApplianceLoan />,
-        // },
-        // {
-        //     key: '5',
-        //     label: 'Salary Loan',
-        //     children: <SalaryLoan />,
-        // },
-        // {
-        //     key: '6',
-        //     label: 'Production Loan',
-        //     children: <ProductionLoan />,
-        // }
-
     ];
 
     return (

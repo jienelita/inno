@@ -26,24 +26,28 @@ class UserManagerController extends Controller
             'role_list' => RoleList::all(),
         ]);
     }
+
     public function loanManager()
     {
         return Inertia::render('loans/index', [
             'user' => User::all()
         ]);
     }
+
     public function updateUser($userid)
     {
         return Inertia::render('user/update-user', [
             'user_details' => User::find($userid)
         ]);
     }
+
     public function membersList()
     {
         return Inertia::render('user/index', [
             'user_list' => User::selectraw('users.id as user_id, users.*')->where('is_admin',  0)->get()
         ]);
     }
+
     public function UpdateUserStatus(Request $request)
     {
         $user = User::findOrFail($request->id);
@@ -53,32 +57,30 @@ class UserManagerController extends Controller
             $arr = [
                 'reason' =>  $request->reason,
                 'user_id' => $request->id,
-                'created_by' => Auth::user()->id
+                'created_by' => Auth::user()->id,
+                'stat' => 0
             ];
 
             UserReason::create($arr);
         }
     }
+
     public function getProfile($user_id)
     {
         $user = UserImages::useravatar($user_id);
-        $reason = UserReason::selectraw('users.name, user_reason.reason')->join('users', 'user_reason.user_id', 'users.id')->where('user_reason.user_id', $user_id)->orderby('user_reason.id', 'desc')->first();
-        $res = '';
-        $name = '';
-        if ($reason) {
-            $res = $reason->reason;
-            $name = $reason->name;
-        }
         $img = 'avatar.jpg';
         if ($user) {
             $img = $user->imgavata;
         }
         return response()->json([
             'image_name' => $img,
-            'reason' => $res,
-            'disable_by' => $name,
+            'reason' => UserReason::statusReturn($user_id, 0)['reason'],
+            'disable_by' => UserReason::statusReturn($user_id, 0)['name'],
+            'disaproved_by' => UserReason::statusReturn($user_id, 1)['name'],
+            'disaproved_res' => UserReason::statusReturn($user_id, 1)['reason'],
         ]);
     }
+
     public function UpdateUserRole(Request $request)
     {
         if (is_array($request['values']['role'])) {
@@ -109,12 +111,32 @@ class UserManagerController extends Controller
             }
         }
     }
-    public function UpdatePassword(Request $request){
+
+    public function UpdatePassword(Request $request)
+    {
         $arr = [
             'password' => Hash::make($request->pass),
         ];
         User::where('id', $request->userId)->update($arr);
     }
+
+    public function UpdateMemberStatus(Request $request)
+    {
+        $arr = [
+            'status' => $request->status,
+        ];
+        User::where('id', $request->id)->update($arr);
+        if($request->status == 2){
+            $arr = [
+                'user_id' => $request->id,
+                'reason' => $request->reason,
+                'created_by' => Auth::user()->id,
+                'stat' => 1
+            ];
+            UserReason::create($arr);
+        }
+    }
+
     public function saveUser(Request $request)
     {
         $record = $request->records;

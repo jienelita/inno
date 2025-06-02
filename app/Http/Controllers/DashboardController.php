@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UserReason;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -16,8 +17,10 @@ class DashboardController extends Controller
                 'user' => User::find(Auth::user()->id)
             ]);
         } else {
-            return Inertia::render('dashboard', [
-                'user' => User::find(Auth::user()->id)
+            return Inertia::render('dashboard', 
+            [
+                'user' => User::find(Auth::user()->id),
+                'disaproved_res' => UserReason::statusReturn(Auth::user()->id, 1)['reason'],
             ]);
         }
     }

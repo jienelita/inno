@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { getStatusTag, loanCodeMap, loanTerms, modeMap, permissionMap, statusFilterOptions, statusOptions, tagLabels } from '@/lib/helpers';
-import { Avatar, Button, ConfigProviderProps, Drawer, Dropdown, Image, message, Modal, Space, Tag } from 'antd';
+import { statusColor, AccountingstatusOptions, accpermissionMap, AccstatusOptions, getStatusTag, loanCodeMap, loanTerms, modeMap, permissionMap, statusFilterOptions, statusOptions, tagLabels } from '@/lib/helpers';
+import { Alert, Avatar, Button, ConfigProviderProps, Divider, Drawer, Dropdown, Image, message, Modal, Space, Tag, Timeline } from 'antd';
 import { DownloadOutlined, DownOutlined, UserOutlined } from '@ant-design/icons';
 import ImageFreeCropModal from '@/lib/ImageFreeCropModal';
 import ImageEasyCropModal from '@/lib/ImageEasyCropModal';
@@ -14,7 +14,6 @@ import TextArea from 'antd/es/input/TextArea';
 import UserInformation from '@/components/user/userInformation';
 import { usePermission } from '@/hooks/usePermission';
 
-//import { DownloadOutlined, Crop } from '@ant-design/icons';
 const breadcrumbs = [
     { title: 'Loans', href: '/loan-manager' },
     { title: 'View Loan', href: '/loan-manager' },
@@ -28,8 +27,15 @@ type Document = {
     loan_id: number;
     image_mapping: number;
     reason: string;
+    reason_deny: string;
     current_address: string;
 };
+type LogFile =
+    {
+        log_message: string;
+        status: number
+        id: number;
+    }
 interface Doc {
     id: number;
     image_name: string;
@@ -60,12 +66,21 @@ interface Props {
         name: string;
         email_verified_at: string;
         user_id: number;
+        acc_status: number;
+        check_by: number;
+        reason_deny: string;
+        approve_by: number;
     };
     documents: Document[];
+    logfile: LogFile[];
     img_data: string;
     approve_by: {
         name: string;
         approve_by: number
+    }
+    checkby: {
+        name: string;
+        check_by: number
     }
 }
 type SizeType = ConfigProviderProps['componentSize'];
@@ -96,10 +111,13 @@ interface UserType {
     name: string;
     email_verified_at: string;
 }
-export default function ViewDetails({ details, documents, img_data, approve_by }: Props) {
-
+export default function ViewDetails({ details, documents, img_data, approve_by, checkby, logfile }: Props) {
+    console.log(logfile);
+    const { data, post, setData, reset } = useForm({
+        reason: '',
+        reason_deny: '',
+    });
     const loandetails = JSON.parse(details.loan_details);
-    const { tagColor, statusText } = getStatusTag(details.status);
     const [easyCropVisible, setEasyCropVisible] = useState(false);
     const [freeCropVisible, setFreeCropVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState('');
@@ -211,15 +229,19 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
     const [size, setSize] = useState<SizeType>('middle'); // default is 'middle'
 
     const [isDisapproveModalOpen, setIsDisapproveModalOpen] = useState(false);
-    const [selectedLoanId, setSelectedLoanId] = useState<number | null>(null);
+    //const [selectedLoanId, setSelectedLoanId] = useState<number | null>(null);
+    const [selectedLoan, setSelectedLoan] = useState<{ loanId: number; status: number } | null>(null);
     const [disapproveReason, setDisapproveReason] = useState('');
+    const { tagColor, statusText } = getStatusTag(details.status);
+
     const isDanger = tagColor === 'red';    // Disapproved
     const isWarning = tagColor === 'gold';
-    const { data, post, setData, reset } = useForm();
+
     const handleMenuClick = (loanId: number) => (e: any) => {
         const newStatus = parseInt(e.key);
-        if (newStatus === 2) {
-            setSelectedLoanId(loanId);
+        if (newStatus === 2 || newStatus === 4) {
+            // setSelectedLoanId(loanId);
+            setSelectedLoan({ loanId, status: newStatus });
             setIsDisapproveModalOpen(true);
         } else {
             post(`/loan-update-status/${newStatus}/${loanId}`, {
@@ -238,9 +260,46 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
             });
         }
     };
+
+    const [selectedStatusKey, setSelectedStatusKey] = useState<number | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const { colorTagging, statusAccText } = AccountingstatusOptions(details.acc_status);
+
+    const isPreApprove = colorTagging === 'green';
+    const isDeny = colorTagging === 'red';
+
+    const saveUpdateAcc = (selectedStatusKey: number, newStatus: number) => {
+        post(`/update-accounting/${selectedStatusKey}/${newStatus}`, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+            onSuccess: (page) => {
+                const res = page.props as any;
+                if (res.status > 1) {
+                    message.error(res.message);
+                } else {
+                    message.success(res.message);
+                }
+                setIsModalOpen(false)
+                reset(); // clear form
+            }
+        })
+    }
+
+    const handleAccountingClick = (loanId: number) => (e: any) => {
+        const newStatus = parseInt(e.key);
+        if (newStatus === 2) {
+            setSelectedStatusKey(loanId);
+            setIsModalOpen(true);
+        } else {
+            saveUpdateAcc(loanId, newStatus);
+        }
+    };
+
     const { props } = usePage<PageProps>();
     const user = props.auth.user;
     const option = getStatusTag(details.status);
+    const accOption = AccountingstatusOptions(details.acc_status);
     const date = new Date(details.updated_at);
     const formattedDate = date.toLocaleString('en-GB', {
         day: '2-digit',
@@ -252,10 +311,8 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
         hour12: true, // Set to false if you prefer 24-hour time
     });
     const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
-    const [isDisableModalVisible, setIsDisableModalVisible] = useState(false);
     const [open, setOpen] = useState(false);
-    const [disableReason, setDisableReason] = useState('');
-    const [pendingStatusChange, setPendingStatusChange] = useState<{ id: number; status: number } | null>(null);
+
     const showDrawer = (user: UserType) => {
         setSelectedUser(user);
         setOpen(true);
@@ -265,17 +322,41 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
         setSelectedUser(null);
     };
     const { hasPermission } = usePermission();
+
     const filteredStatusOptions = statusOptions?.filter((item) => {
-        const perm = permissionMap[item.key];
+        if (!item || typeof item.key === 'undefined' || item.key === null) return false;
+        const perm = permissionMap[String(item.key)];
         if (perm) {
             return hasPermission(perm[0], perm[1]);
         }
         return true;
     });
+
+    const accStatusOptions = AccstatusOptions?.filter((item) => {
+        if (!item || typeof item.key === 'undefined' || item.key === null) return false;
+        const perm = accpermissionMap[String(item.key)];
+        if (perm) {
+            return hasPermission(perm[0], perm[1]);
+        }
+        return true;
+    });
+
+    const canShowDropdown =
+        (hasPermission('loan-manager', 'approved') &&
+            hasPermission('loan-manager', 'disapproved')) ||
+        user.is_admin === 3 ||
+        details.status !== 2;
+
+    const shouldShowDropdown =
+        (details.status > 0 && details.acc_status > 0) ||
+        (!hasPermission('loan-manager', 'approved') &&
+            !hasPermission('loan-manager', 'disapproved'));
+
+    const showSuccessTagInstead =
+        details.status === 1 && !hasPermission('loan-manager', 'approved');
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Loan Details" />
-
             <div className="px-4 pt-4">
                 <div className="p-2 rounded-xl border flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
@@ -345,24 +426,65 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
             {user.is_admin > 0 && (
                 <div className="px-4 pt-4">
                     <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
-
                         <div className="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
-                            <Dropdown
-                                menu={{
-                                    items: filteredStatusOptions,
-                                    onClick: handleMenuClick(details.id),
-                                }}
-                                trigger={['click']}>
-                                <Button
-                                    size={size}
-                                    type={!isWarning && !isDanger ? 'primary' : 'default'} // Primary only for Approved
-                                    danger={isDanger}
-                                    className={
-                                        isWarning ? 'bg-yellow-400 text-black border-none hover:bg-yellow-500' : ''
-                                    }>
-                                    {statusText} <DownOutlined />
-                                </Button>
-                            </Dropdown>
+                            {(filteredStatusOptions?.length ?? 0) > 0 && (
+                                <>
+                                    {canShowDropdown ? (
+                                        showSuccessTagInstead ? (
+                                            <Tag color="success">{statusText}</Tag>
+                                        ) : shouldShowDropdown ? (
+                                            <Dropdown
+                                                menu={{ items: filteredStatusOptions, onClick: handleMenuClick(details.id) }}
+                                                trigger={['click']}
+                                            >
+                                                <Button
+                                                    size={size}
+                                                    type={!isWarning && !isDanger ? 'primary' : 'default'}
+                                                    danger={isDanger}
+                                                    className={isWarning ? 'bg-yellow-400 text-black border-none hover:bg-yellow-500' : ''}
+                                                >
+                                                    {statusText} <DownOutlined />
+                                                </Button>
+                                            </Dropdown>
+                                        ) : (
+                                            <Alert
+                                                type="error"
+                                                message={
+                                                    details.status === 0
+                                                        ? 'Pending, please wait for validation'
+                                                        : 'Validated but not yet confirmed from accounting'
+                                                }
+                                            />
+                                        )
+                                    ) : (
+                                        <Tag color={tagColor}>{statusText}</Tag>
+                                    )}
+                                </>
+                            )}
+
+                            {details.status === 3 && (
+                                <>
+                                    {(hasPermission('loan-manager', 'pre-approved') || hasPermission('loan-manager', 'deny')) && (
+                                        <Dropdown
+                                            menu={{
+                                                items: accStatusOptions,
+                                                onClick: handleAccountingClick(details.id),
+                                            }}
+                                            trigger={['click']}
+                                        >
+                                            <Button
+                                                size={size}
+                                                type={!isDeny && !isPreApprove ? 'primary' : 'default'}
+                                                danger={isDeny}
+                                                className={isDeny ? 'bg-yellow-400 text-black border-none hover:bg-yellow-500' : ''}
+                                            >
+                                                {statusAccText} <DownOutlined />
+                                            </Button>
+                                        </Dropdown>
+                                    )}
+                                </>
+                            )}
+
                             <Button href={`/promisory-note/${details.id}`} className='ms-1' type="default" icon={<Printer />} >
                                 Promisory Note
                             </Button>
@@ -438,6 +560,18 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
                                 <Tag color={tagColor}>{statusText}</Tag>
                             </span>
                         </div>
+                        {(details.status === 2 || details.status === 4) && (
+                            <>
+                                <div className="flex items-center justify-between border-b border-gray-100 py-3 dark:border-gray-800">
+                                    <span className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                        Reason:
+                                    </span>
+                                    <span className="text-right text-theme-sm text-gray-500 dark:text-gray-400">
+                                        {details.reason}
+                                    </span>
+                                </div>
+                            </>
+                        )}
                         {(details.status > 0) && (
                             <>
                                 <div className="flex items-center justify-between border-b border-gray-100 py-3 dark:border-gray-800">
@@ -445,33 +579,77 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
                                         {option.statusText} By:
                                     </span>
                                     <span className="text-right text-theme-sm text-gray-500 dark:text-gray-400">
-                                        {approve_by?.approve_by === 0 && (
+                                        {details.approve_by > 0 && (
                                             <>
                                                 {approve_by.name}
                                             </>
                                         )}
+                                    </span>
+                                </div>
 
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between border-b border-gray-100 py-3 dark:border-gray-800">
-                                    <span className="text-theme-sm text-gray-500 dark:text-gray-400">
-                                        Updated At:
-                                    </span>
-                                    <span className="text-right text-theme-sm text-gray-500 dark:text-gray-400">
-                                        {formattedDate}
-                                    </span>
-                                </div>
+
                             </>
                         )}
-                        {details.status === 2 && (
+                        {details.status !== 4 && (
                             <>
-                                <div className=" justify-between border-b border-gray-100 py-3 dark:border-gray-800">
-                                    <span className="text-theme-sm text-gray-500 dark:text-gray-400">
-                                        Reason: {details.reason}
-                                    </span>
-                                </div>
+                                {details.acc_status > 0 && (
+                                    <>
+                                        <Divider>Accounting</Divider>
+                                        <div className="flex items-center justify-between border-b border-gray-100 py-3 dark:border-gray-800">
+                                            <span className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                                Accounting Status:
+                                            </span>
+                                            <span className="text-right text-theme-sm text-gray-500 dark:text-gray-400">
+                                                <Tag color={colorTagging}>{accOption.statusAccText}</Tag>
+                                            </span>
+                                        </div>
+                                        {details.acc_status === 2 && (
+                                            <div className="flex items-center justify-between border-b border-gray-100 py-3 dark:border-gray-800">
+                                                <span className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                                    Deny Reason:
+                                                </span>
+                                                <span className="text-right text-theme-sm text-gray-500 dark:text-gray-400">
+                                                    {details.reason_deny}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center justify-between border-b border-gray-100 py-3 dark:border-gray-800 mb-8">
+                                            <span className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                                Process by:
+                                            </span>
+                                            <span className="text-right text-theme-sm text-gray-500 dark:text-gray-400">
+                                                {details.check_by > 0 && (
+                                                    <>
+                                                        {checkby?.name}
+                                                    </>
+                                                )}
+                                            </span>
+                                        </div>
+
+                                    </>
+                                )}
                             </>
                         )}
+                        <Divider>Date Updated</Divider>
+                        <div className="flex items-center justify-between border-b border-gray-100 py-3 dark:border-gray-800">
+                            <span className="text-theme-sm text-gray-500 dark:text-gray-400">
+                                Updated At:
+                            </span>
+                            <span className="text-right text-theme-sm text-gray-500 dark:text-gray-400">
+                                {formattedDate}
+                            </span>
+                        </div>
+                        <div className='mt-8 mb-8'>
+                            <Divider>Log File</Divider>
+                        </div>
+
+                        <Timeline
+                            items={logfile.map((log) => ({
+                                children: <div dangerouslySetInnerHTML={{ __html: log.log_message }} />,
+                                color: statusColor(log.status),
+                            }))}
+                        />
+
                     </div>
                 </div>
                 <div className="w-2/3 border-sidebar-border/70 dark:border-sidebar-border relative  overflow-hidden rounded-xl border">
@@ -499,7 +677,7 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
                                     </h3>
                                     <Image width={400} src={`/images/${doc.image_name}`} alt={tagLabels[doc.image_mapping]} />
                                     {/* This section will crop image */}
-                                    {hasPermission('loan-manager', 'crop') &&  (
+                                    {hasPermission('loan-manager', 'crop') && (
                                         <>
                                             {doc.image_mapping === 3 ? (
                                                 <Button size="large"
@@ -538,40 +716,7 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
                             )}
                         </div>
                     </div>
-                    <Modal
-                        title="Reason for Disapproval"
-                        open={isDisapproveModalOpen}
-                        onOk={() => {
-                            if (!selectedLoanId) return;
-                            post(`/loan-update-reason/${selectedLoanId}`, {
-                                preserveState: true,
-                                preserveScroll: true,
-                                replace: true,
-                                onSuccess: (page) => {
-                                    const res = page.props as any;
-                                    if (res.status > 1) {
-                                        message.error(res.message);
-                                    } else {
-                                        message.success(res.message);
-                                    }
-                                    setIsDisapproveModalOpen(false);
-                                    reset(); // clear form
-                                },
-                            });
-                        }}
-                        onCancel={() => {
-                            setIsDisapproveModalOpen(false);
-                            setDisapproveReason('');
-                        }}
-                        okText="Submit"
-                        cancelText="Cancel">
-                        <TextArea
-                            rows={4}
-                            value={data.reason}
-                            onChange={(e) => setData('reason', e.target.value)}
-                            placeholder="Please provide a reason for disapproval..."
-                        />
-                    </Modal>
+
                 </div >
             </div >
             <Drawer
@@ -590,6 +735,64 @@ export default function ViewDetails({ details, documents, img_data, approve_by }
                     <UserInformation user={selectedUser} />
                 )}
             </Drawer>
+            <Modal
+                open={isModalOpen}
+                title="Application Denied"
+                onOk={() => {
+                    if (!selectedStatusKey) return;
+                    saveUpdateAcc(selectedStatusKey, 2);
+                }}
+                onCancel={() => {
+                    setIsModalOpen(false)
+                }}
+                okText="Submit"
+                cancelText="Cancel"
+            >
+                <TextArea
+                    rows={4}
+                    value={data.reason_deny}
+                    onChange={(e) => setData('reason_deny', e.target.value)}
+                    placeholder="Please provide a reason for application deny..."
+                />
+            </Modal>
+            <Modal
+                title={
+                    selectedLoan?.status === 2
+                        ? 'Reason for Disapproval'
+                        : 'Reason for Reject.'
+                }
+                open={isDisapproveModalOpen}
+                onOk={() => {
+                    if (!selectedLoan?.loanId) return;
+                    post(`/loan-update-reason/${selectedLoan?.loanId}/${selectedLoan?.status}`, {
+                        preserveState: true,
+                        preserveScroll: true,
+                        replace: true,
+                        onSuccess: (page) => {
+                            const res = page.props as any;
+                            if (res.status > 1) {
+                                message.error(res.message);
+                            } else {
+                                message.success(res.message);
+                            }
+                            setIsDisapproveModalOpen(false);
+                            reset(); // clear form
+                        },
+                    });
+                }}
+                onCancel={() => {
+                    setIsDisapproveModalOpen(false);
+                    setDisapproveReason('');
+                }}
+                okText="Submit"
+                cancelText="Cancel">
+                <TextArea
+                    rows={4}
+                    value={data.reason}
+                    onChange={(e) => setData('reason', e.target.value)}
+                    placeholder="Please provide a reason for disapproval..."
+                />
+            </Modal>
         </AppLayout >
     );
 }

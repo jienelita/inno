@@ -3,11 +3,12 @@ import { type BreadcrumbItem } from '@/types';
 import '@ant-design/v5-patch-for-react-19';
 import { Head, Link, router } from '@inertiajs/react';
 import { Button, Checkbox, Drawer, Form, Input, message, Modal, Space, Table, Tooltip } from 'antd';
-import { Plus, Trash, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Pencil, Plus, Trash, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import type { FormProps, TableProps, TableColumnsType } from 'antd';
 import { formatDateTime } from '@/lib/helpers';
 import RoleComponents from '@/components/role/role';
+import UpdateRole from '@/components/role/UpdateRole';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -36,15 +37,31 @@ interface DataType {
     created_at: string;
     permission: string;
 }
+interface CountList{
+
+}
 function roleIndex({ role, role_group }: Props) {
     const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
     const [open, setOpen] = useState(false);
+
+    const [assignOpen, setAssignOpen] = useState(false);
+    const [selectedRoleId, setSelectedUserId] = useState<number | null>(null);
+    const [resetKey, setResetKey] = useState(0);
+
     const showDrawer = () => {
-        
         setOpen(true);
     };
     const onClose = () => {
         setOpen(false);
+    };
+    const showAssignDrawer = (userId: number) => {
+        setSelectedUserId(userId);
+        setAssignOpen(true);
+    };
+    const onAssignDrawerClose = () => {
+        setAssignOpen(false);
+        setSelectedUserId(null);
+        setResetKey(prev => prev + 1);
     };
     const dataSource: DataType[] = role.map((role) => ({
         key: role.id,
@@ -54,9 +71,39 @@ function roleIndex({ role, role_group }: Props) {
         created_at: role.created_at,
     }));
 
+    const UserCountCell = ({ roleid }) => {
+        const [countList, setUserCount] = useState<CountList>([]);
+        useEffect(() => {
+            const fetchAssignRoles = async () => {
+                try {
+                    const res = await fetch(`/user-count-role/${roleid}`);
+                    const data = await res.json();
+                    setUserCount(data || []);
+                } catch (err) {
+                    setUserCount([]);
+                }
+            };
+            fetchAssignRoles();
+        }, [roleid]);
+        return (
+            <>
+               {countList} 
+            </>
+        );
+    }
+
     const columns: TableColumnsType<DataType> = [
         { title: 'ID', dataIndex: 'id', key: 'id' },
         { title: 'Role Name', dataIndex: 'role_name', key: 'role_name' },
+        { title: 'User Assign', key: 'user_assign',
+            render: (_, record) => {                
+                return (
+                    <>
+                         <UserCountCell roleid={record.id} /> 
+                    </>
+                );
+            },
+         },
         {
             title: 'Created At',
             dataIndex: 'created_at',
@@ -72,6 +119,10 @@ function roleIndex({ role, role_group }: Props) {
             key: 'operation',
             render: (_, record) => (
                 <>
+                    <Tooltip title="Update Permission">
+                        <Button color="blue" variant="text" icon={<Pencil />} size="middle" className='me-1' onClick={() => showAssignDrawer(record.id)} />
+                    </Tooltip>
+
                     <Tooltip title="Delete Permission">
                         <Button color="red" variant="text" icon={<Trash2 />} size="middle" className='me-1' />
                     </Tooltip>
@@ -118,6 +169,25 @@ function roleIndex({ role, role_group }: Props) {
                 width={720}
             >
                 <RoleComponents onClose={onClose} role_group={role_group} />
+            </Drawer>
+            <Drawer
+                title="Update Assign Role"
+                width={720}
+                onClose={onAssignDrawerClose}
+                open={assignOpen}
+                styles={{
+                    body: {
+                        paddingBottom: 80,
+                    },
+                }}
+            >
+                <UpdateRole
+                    key={resetKey}
+                    onClose={onAssignDrawerClose}
+                    roleId={selectedRoleId}
+                    role_group={role_group}
+                    resetFormKey={resetKey}
+                />
             </Drawer>
         </AppLayout>
     )

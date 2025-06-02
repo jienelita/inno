@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AccountBalance;
 use App\Models\LoanApplication;
+use App\Models\LoanLog;
 use App\Models\UserImages;
 use Barryvdh\DomPDF\Facade\Pdf;
 use DateTime;
@@ -90,18 +91,48 @@ class LoanController extends Controller
             'approve_by' => Auth::user()->id
         ];
         LoanApplication::where('id', $loanID)->update($arr);
+        loanLog($statusID, $loanID);
         return back()->with([
             'status' => 1,
             'message' => 'Loan successfully updated.'
         ]);
     }
 
-    public function loanUpdateReason(Request $request, $id)
+    public function UpdateAccountingDeny($loanId, $status, Request $request)
     {
         $arr = [
-            'status' => 2,
-            'reason' => $request->reason
+            'acc_status' => $status,
+            'reason_deny' => $request->reason_deny,
+            'check_by' => Auth::user()->id
         ];
+
+        LoanApplication::where('id', $loanId)->update($arr);
+
+        loanLog($status, $loanId, $request->reason_deny, '2');
+
+        return back()->with([
+            'status' => 1,
+            'message' => 'Loan successfully updated.'
+        ]);
+    }
+
+    public function loanUpdateReason(Request $request, $id, $status)
+    {
+        if ($status == 4) {
+            $arr = [
+                'acc_status' => 2,
+                'reason' => $request->reason,
+                'status' => $status,
+                'approve_by' => Auth::user()->id
+            ];
+        } else {
+            $arr = [
+                'status' => $status,
+                'reason' => $request->reason,
+                'approve_by' => Auth::user()->id
+            ];
+        }
+        loanLog($status, $id, $request->reason);
 
         LoanApplication::where('id', $id)->update($arr);
 
@@ -175,7 +206,6 @@ class LoanController extends Controller
             ];
         }
 
-        // return view('promisory-note')->with($data);
         $pdf = Pdf::loadView('promisory-note', $data)->setPaper('a4', 'portrait');
         return $pdf->download($get->name . '-' . $data['loanCode'] . '-' . $data['loanCode'] . '.pdf');
     }
@@ -193,7 +223,9 @@ class LoanController extends Controller
             'details' =>  $details,
             'documents' => UserImages::where('loan_id', $id)->orderBy('id', 'asc')->get(),
             'img_data' => $img_is,
-            'approve_by' => LoanApplication::approve($details->approve_by)
+            'approve_by' => LoanApplication::approve($details->approve_by, 'approve_by'),
+            'checkby' => LoanApplication::approve($details->check_by, 'check_by'),
+            'logfile' => LoanLog::where('loan_id', $id)->orderby('id','desc')->get()
         ]);
     }
 
@@ -375,9 +407,6 @@ class LoanController extends Controller
 
     public function test()
     {
-        // echo str_replace('/images/', '', '');
-        //echo str_replace("/images/", "", "/images/1745824894magrow-id.jpg");
-        //hasPermission('os-product-list', 'create');
         echo '<pre>';
         $permission = session()->all();
         $permissions = $permission['user_role'];

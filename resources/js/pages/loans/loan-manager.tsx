@@ -46,13 +46,12 @@ type PageProps = {
         user: User;
     };
 };
-
-
 export default function Index() {
     const { props } = usePage<PageProps>();
     const user = props.auth.user;
     const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
     const [reasonText, setReasonText] = useState('');
+    const [selectedLoan, setSelectedLoan] = useState<{ loanId: number; status: number } | null>(null);
     const { loan } = usePage().props as unknown as {
         loan: {
             data: LoanRecord[];
@@ -142,7 +141,7 @@ export default function Index() {
 
     const { hasPermission } = usePermission();
     const filteredStatusOptions = statusOptions?.filter((item) => {
-        const perm = permissionMap[item.key];
+        const perm = permissionMap[String(item?.key)];
         if (perm) {
             return hasPermission(perm[0], perm[1]);
         }
@@ -228,8 +227,9 @@ export default function Index() {
                 const isWarning = tagColor === 'gold';  // Pending
                 const handleMenuClick = (loanId: number) => (e: any) => {
                     const newStatus = parseInt(e.key);
-                    if (newStatus === 2) {
-                        setSelectedLoanId(loanId);
+                     if (newStatus === 2 || newStatus === 4) {
+                        //setSelectedLoanId(loanId);
+                        setSelectedLoan({ loanId, status: newStatus });
                         setIsDisapproveModalOpen(true);
                     } else {
                         post(`/loan-update-status/${newStatus}/${loanId}`, {
@@ -252,23 +252,28 @@ export default function Index() {
                     onClick: handleMenuClick(record.id),
                 };
                 return (
-                    <Dropdown
-                        // menu={{
-                        //     items: statusOptions,
-                        //     onClick: handleMenuClick(record.id),
-                        // }}
-                        menu={menuProps}
-                        trigger={['click']}>
-                        <Button
-                            size="small"
-                            type={!isWarning && !isDanger ? 'primary' : 'default'} // Primary only for Approved
-                            danger={isDanger}
-                            className={
-                                isWarning ? 'bg-yellow-400 text-black border-none hover:bg-yellow-500' : ''
-                            }>
-                            {statusText} <DownOutlined />
-                        </Button>
-                    </Dropdown>
+                    <>
+                        {record.status !== 2 ? (
+                            <Dropdown
+                                menu={menuProps}
+                                trigger={['click']}>
+                                <Button
+                                    size="small"
+                                    type={!isWarning && !isDanger ? 'primary' : 'default'} // Primary only for Approved
+                                    danger={isDanger}
+                                    className={
+                                        isWarning ? 'bg-yellow-400 text-black border-none hover:bg-yellow-500' : ''
+                                    }>
+                                    {statusText}
+                                    <DownOutlined />
+                                </Button>
+                            </Dropdown>
+                        ) : (
+                            <>
+                                <Tag color='red'>{statusText}</Tag>
+                            </>
+                        )}
+                    </>
                 );
             },
         },
@@ -362,11 +367,17 @@ export default function Index() {
                 <p>{reasonText}</p>
             </Modal>
             <Modal
-                title="Reason for Disapproval"
+                title={
+                    selectedLoan?.status === 2
+                        ? 'Reason for Disapproval'
+                        : 'Reason for Reject.'
+                }
                 open={isDisapproveModalOpen}
                 onOk={() => {
-                    if (!selectedLoanId) return;
-                    post(`/loan-update-reason/${selectedLoanId}`, {
+                    // if (!selectedLoanId) return;
+                    // post(`/loan-update-reason/${selectedLoanId}`, {
+                    if (!selectedLoan?.loanId) return;
+                    post(`/loan-update-reason/${selectedLoan?.loanId}/${selectedLoan?.status}`, {
                         preserveState: true,
                         preserveScroll: true,
                         replace: true,

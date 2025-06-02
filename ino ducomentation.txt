@@ -27,3 +27,10 @@ composer require barryvdh/laravel-dompdf
 --admin access
 Florconde30@gmail.com
 Errolflynn07
+
+
+to do
+
+http://127.0.0.1:8000/loan-manager
+- kung and user kay super admin, dapat ang approved kay dli text, dropdown ghapon.
+

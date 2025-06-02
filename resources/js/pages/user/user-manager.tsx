@@ -60,6 +60,10 @@ interface RoleGroup {
     group_name: string;
     id: number;
 }
+interface RoleList{
+    userId: number | any;
+    length: number;
+}
 type User = {
     id: number;
     name: string;
@@ -106,6 +110,7 @@ function UserManager({ user_list, role_group }: Props) {
             };
             fetchAssignRoles();
         }, [userId]);
+        
         return (
             <>
                 {roleList.length === 0

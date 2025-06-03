@@ -89,9 +89,13 @@ type Props = {
     la_capital_share: string;
   };
   gallery?: { image_name: string; image_path: string }[];
+  userinfo?: {
+    status: number;
+    is_active: number;
+  };
 };
 
-export default function Lad({ balance, gallery }: Props) {
+export default function Lad({ balance, gallery, userinfo }: Props) {
 
   const [isLadModalOpen, setIsLadModalOpen] = useState(false);
 
@@ -218,7 +222,9 @@ export default function Lad({ balance, gallery }: Props) {
         </div>
         <div className="flex items-start w-full gap-3 sm:justify-end ">
           <div className="inline-flex w-fit items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900">
-            <Button type="primary" onClick={LadModal} >Make Calculation Now</Button>
+            {(userinfo?.status === 1 && userinfo?.is_active === 3) && (
+              <Button type="primary" onClick={LadModal} >Make Calculation Now</Button>
+            )}
           </div>
         </div>
       </div>

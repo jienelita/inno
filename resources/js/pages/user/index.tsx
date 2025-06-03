@@ -1,15 +1,16 @@
 import AppLayout from '@/layouts/app-layout'
 import { Head, router, Link, usePage, useForm } from '@inertiajs/react'
 import { type BreadcrumbItem } from '@/types';
-import { Button, Drawer, Dropdown, Input, message, Modal, Space, Table, TableColumnsType, Tag } from 'antd';
+import { Button, Drawer, Dropdown, Input, message, Modal, Space, Table, TableColumnsType, Tag, Tooltip } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { formatDate, formatDateTime, memberOptions, memberStatus, membertatusTag, permissionMemberMap, statusOptions, userStatus } from '@/lib/helpers';
 import { useState } from 'react';
-import { Eye, PencilIcon } from 'lucide-react';
+import { Eye, PencilIcon, RefreshCcw } from 'lucide-react';
 import UserInformation from '@/components/user/userInformation';
 import '@ant-design/v5-patch-for-react-19';
 import type { MenuInfo } from 'rc-menu/lib/interface';
 import { usePermission } from '@/hooks/usePermission';
+import UpdateDatabase from '@/components/user/UpdateDatabase';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -93,8 +94,10 @@ type PageProps = {
 };
 function index({ user_list }: Props) {
     const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
-    const [open, setOpen] = useState(false);
+    const [open, setOpen] = useState<{ open: boolean; location: number | null }>({ open: false, location: null });
     const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
+    //  const [drawer, setDrawer] = useState<{ open: boolean; location: number | null }>({ open: false, location: null });
+
     const [isDisableModalVisible, setIsDisableModalVisible] = useState(false);
     const [disableReason, setDisableReason] = useState('');
     const [pendingStatusChange, setPendingStatusChange] = useState<{ id: number; status: number } | null>(null);
@@ -103,12 +106,14 @@ function index({ user_list }: Props) {
     const [disapprovedReason, setDisapprovedReason] = useState('');
     const { props } = usePage<PageProps>();
     const user = props.auth.user;
-    const showDrawer = (user: UserType) => {
+    const showDrawer = (user: UserType, location: number) => {
+        console.log(location);
         setSelectedUser(user);
-        setOpen(true);
+        setOpen({ open: true, location: location });
+        //  setDrawer({ open: true, location: location });
     };
     const onClose = () => {
-        setOpen(false);
+        setOpen({ open: false, location: 0 });
         setSelectedUser(null);
     };
     const dataSource: DataType[] = user_list.map((user) => ({
@@ -216,7 +221,7 @@ function index({ user_list }: Props) {
     };
     const filteredMemberOptions = memberOptions?.filter((item) => {
         const perm = permissionMemberMap[String(item?.key)];
-        console.log(perm);
+
         if (perm) {
             return hasPermission(perm[0], perm[1]);
         }
@@ -269,14 +274,18 @@ function index({ user_list }: Props) {
             title: 'Action',
             key: 'operation',
             render: (_, record) => (
-                <>
+                <Space>
                     {hasPermission('members-section', 'view') && (
-                        <Button color="cyan" variant="text" icon={<Eye />} size="middle" className='me-1' onClick={() => showDrawer(record)} />
+                        <Tooltip title="View"><Button color="cyan" variant="text" icon={<Eye />} size="middle" onClick={() => showDrawer(record, 1)} /></Tooltip>
                     )}
                     {hasPermission('members-section', 'edit') && (
-                        <Link href={`member/${record.key}`}><Button type="link" icon={<PencilIcon />} size="small" /></Link>
+                        <Tooltip title="Update"><Link href={`member/${record.key}`}><Button type="link" icon={<PencilIcon />} size="small" /></Link></Tooltip>
                     )}
-                </>
+                    {user.is_admin === 3 && (
+                        <Tooltip title="Update Records"><Button color="red" variant="text" icon={<RefreshCcw />} size="middle" onClick={() => showDrawer(record, 2)} /></Tooltip>
+                    )}
+                </Space>
+
             )
         }
     ];
@@ -323,7 +332,7 @@ function index({ user_list }: Props) {
                 title="Member Profile"
                 width={720}
                 onClose={onClose}
-                open={open}
+                open={open.open}
                 styles={{ body: { paddingBottom: 80 } }}
                 extra={
                     <Space>
@@ -331,9 +340,20 @@ function index({ user_list }: Props) {
                     </Space>
                 }
             >
-                {selectedUser && (
-                    <UserInformation user={selectedUser} />
+                {open.location === 1 ? (
+                    <>
+                        {selectedUser && (
+                            <UserInformation user={selectedUser} />
+                        )}
+                    </>
+                ) : (
+                    <>
+                        {selectedUser && (
+                            <UpdateDatabase userinfo={selectedUser} />
+                        )}
+                    </>
                 )}
+
             </Drawer>
             <Modal
                 title="Disable Account"

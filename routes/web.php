@@ -42,6 +42,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/user-password-update', [UserManagerController::class, 'UpdatePassword']);
         Route::post('/update-role/{roleid}', [RoleManagerController::class, 'updateRole']);
         Route::get('/user-count-role/{role_id}', [RoleManagerController::class, 'CountRoleUser']);
+        Route::get('/query', [UserManagerController::class, 'testQuery']);
+        Route::post('/update-user-database', [UserManagerController::class, 'UpdateUserDatabase']);
         
     });
 

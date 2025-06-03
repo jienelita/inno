@@ -24,7 +24,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 export default function Calculator() {
     const props = usePage().props as {
-        user?:{
+        user?: {
             status: number;
             is_active: number;
         };
@@ -45,31 +45,32 @@ export default function Calculator() {
             key: '1',
             label: 'Net Cash',
             children: <NetCash balance={account_balance} gallery={gallery} userinfo={user} />,
-            
+
         },
         {
             key: '2',
             label: 'LAD',
-            children: <Lad balance={account_balance} gallery={gallery} />,
+            children: <Lad balance={account_balance} gallery={gallery} userinfo={user} />,
         },
         {
             key: '3',
             label: 'APL (CA)',
-            children: <Apl balance={account_balance} gallery={gallery} />,
+            children: <Apl balance={account_balance} gallery={gallery} userinfo={user} />,
         },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Loan Calculator" />
-            
+
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
                     <div className="p-4 md:p-4 dark:text-white/90">
-                        <Tabs defaultActiveKey="1" items={items} onChange={onChange}/>
+                        <Tabs defaultActiveKey="1" items={items} onChange={onChange} />
                     </div >
                 </div >
             </div >
         </AppLayout >
     )
 }
+//what is the greater than the gods and worse that the titans. the poor have it and the rich require it but if you eat it you'll die

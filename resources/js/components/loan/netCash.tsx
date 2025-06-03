@@ -149,8 +149,7 @@ export default function NetCash({ balance, gallery, userinfo }: Props) {
         </div>
         <div className="flex items-start w-full gap-3 sm:justify-end ">
           <div className="inline-flex w-fit items-center gap-0.5 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900">
-            
-            {(userinfo?.status === 1 && userinfo?.is_active === 3 ) && (
+            {(userinfo?.status === 1 && userinfo?.is_active === 3) && (
               <Button type="primary" onClick={NetcashModal} >Make Calculation Now</Button>
             )}
           </div>

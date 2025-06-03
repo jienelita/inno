@@ -12,6 +12,7 @@ use App\Models\UserImages;
 use App\Models\UserReason;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 
@@ -126,7 +127,7 @@ class UserManagerController extends Controller
             'status' => $request->status,
         ];
         User::where('id', $request->id)->update($arr);
-        if($request->status == 2){
+        if ($request->status == 2) {
             $arr = [
                 'user_id' => $request->id,
                 'reason' => $request->reason,
@@ -176,6 +177,100 @@ class UserManagerController extends Controller
                 }
             }
         }
+    }
+    public function UpdateUserDatabase(Request $request)
+    {
+        $cid = str_pad($request['records']['cid'], 6, '0', STR_PAD_LEFT);
+        $results =  DB::connection('sqlsrv')
+            ->table('ClientTable')
+            ->join('RELACC', 'RELACC.CID', '=', 'ClientTable.CID')
+            ->where(function ($query) {
+                $query->where('RELACC.ACC', 'LIKE', '17%')
+                    ->orWhere('RELACC.ACC', 'LIKE', '00%')
+                    ->orWhere('RELACC.ACC', 'LIKE', '24%');
+            })
+            ->where('ClientTable.LastName', '!=', '')
+            ->where('RELACC.CID', $cid)
+            ->get()->map(function ($item) {
+                $transaction = DB::connection('sqlsrv')
+                    ->table('TRNHIST')
+                    ->where('Acc', $item->ACC)
+                    ->orderBy('Recid', 'DESC')
+                    ->first();
+
+                $svac = DB::connection('sqlsrv')
+                    ->table('SVACC')
+                    ->where('Acc', $item->ACC)
+                    ->first();
+
+                $balance = 0;
+                if ($transaction) {
+                    $balance = $transaction->BalAmt / 100;
+                    if ($svac && $svac->PrType == 24) {
+                        $balance = $svac->BalAmt / 100;
+                    }
+                }
+                $accid = trim($item->ACC);
+                $prefix = DB::connection('sqlsrv')
+                    ->table('PRPARMS')
+                    ->where('PrType', substr($accid, 0, 2))
+                    ->first()
+                    ->FullDesc ?? null;
+                return [
+                    'client'   => $item,
+                    'balance'  => $balance,
+                    'prefix'   => $prefix,
+                ];
+            });
+        //return response()->json($results);
+    }
+
+    public function testQuery()
+    {
+        echo '<pre>';
+        $cid = str_pad('17125', 6, '0', STR_PAD_LEFT);
+        $results =  DB::connection('sqlsrv')
+            ->table('ClientTable')
+            ->join('RELACC', 'RELACC.CID', '=', 'ClientTable.CID')
+            ->where(function ($query) {
+                $query->where('RELACC.ACC', 'LIKE', '17%')
+                    ->orWhere('RELACC.ACC', 'LIKE', '00%')
+                    ->orWhere('RELACC.ACC', 'LIKE', '24%');
+            })
+            ->where('ClientTable.LastName', '!=', '')
+            ->where('RELACC.CID', $cid)
+            ->get()->map(function ($item) {
+                $transaction = DB::connection('sqlsrv')
+                    ->table('TRNHIST')
+                    ->where('Acc', $item->ACC)
+                    ->orderBy('Recid', 'DESC')
+                    ->first();
+
+                $svac = DB::connection('sqlsrv')
+                    ->table('SVACC')
+                    ->where('Acc', $item->ACC)
+                    ->first();
+
+                $balance = 0;
+                if ($transaction) {
+                    $balance = $transaction->BalAmt / 100;
+                    if ($svac && $svac->PrType == 24) {
+                        $balance = $svac->BalAmt / 100;
+                    }
+                }
+                $accid = trim($item->ACC);
+                $prefix = DB::connection('sqlsrv')
+                    ->table('PRPARMS')
+                    ->where('PrType', substr($accid, 0, 2))
+                    ->first()
+                    ->FullDesc ?? null;
+                print_r($item);
+                // return [
+                //     'client'   => $item,
+                //     'balance'  => $balance,
+                //     'prefix'   => $prefix,
+                // ];
+            });
     }
 }
 //MagrowMPC143_

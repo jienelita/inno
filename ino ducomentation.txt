@@ -31,6 +31,12 @@ Errolflynn07
 
 to do
 
-http://127.0.0.1:8000/loan-manager
-- kung and user kay super admin, dapat ang approved kay dli text, dropdown ghapon.
+View Profile (direct)
+
+Need to show the loan balance
+
+Route::get('/members-loan/{membersId}', [LoanController::class, 'MembersLoan']);
+
+C:\Users\HomePC\Desktop\Project\inno\resources\js\components\user\userInformation.tsx <--- need to continue @ effect Section
+
 

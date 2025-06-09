@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Alert, Button, Collapse, Drawer, message, Modal, Typography } from "antd";
 import type { CollapseProps, DrawerProps } from 'antd';
 const { Title } = Typography;
@@ -7,27 +7,41 @@ import '@ant-design/v5-patch-for-react-19';
 import Additionalrequirments from './additional-requirments';
 import { loanTerms } from '@/lib/helpers';
 type Props = {
-  balance?: {
-    id: number;
-    net_cash: string;
-  };
   gallery?: { image_name: string; image_path: string }[];
   userinfo?: {
     status: number;
     is_active: number;
+    id: number;
   }
 };
-export default function NetCash({ balance, gallery, userinfo }: Props) {
+export default function NetCash({ gallery, userinfo }: Props) {
   const [loanAmount, setLoanAmount] = useState<number>(0);
   const [proceeds, setProceeds] = useState<number | null>(null);
   const [interest, setInterest] = useState<number>(0);
   const [serviceFee, setServiceFee] = useState<number>(0);
   const [loanTerm, setLoanTerm] = useState('1');
   const [results, setResults] = useState<any>(null);
+  const [membersBalance, setmembersBalance] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchAllRoles = async () => {
+      try {
+        const res = await fetch(`/members-balance/${userinfo?.id}/87`);
+        const data = await res.json();
+        setmembersBalance(data);
+      } catch (err) {
+        console.error('Error fetching image:', err);
+      } finally {
+
+      }
+    };
+    fetchAllRoles();
+  }, []);
+
   const handleCalculate = () => {
     const fee = loanAmount * 0.01; // 1% service fee
     const interestAmount = loanAmount * 0.01; // 1% interest for 15 days
-    const NetcashBalance = parseFloat((balance?.net_cash || '0').replace(/,/g, ''));
+    const NetcashBalance = parseFloat((membersBalance?.balance || '0').replace(/,/g, ''));
     const totalDeduction = fee + interestAmount;
     const netProceeds = loanAmount - totalDeduction - NetcashBalance;
     if (loanAmount === 0) {
@@ -137,11 +151,11 @@ export default function NetCash({ balance, gallery, userinfo }: Props) {
           <p className="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
             Pre-paid cash advance - Netcash
           </p>
-          {balance !== null && (
+          {membersBalance !== null && Object.keys(membersBalance).length > 0 && (
             <>
-              {(balance?.net_cash !== '' || balance?.net_cash !== null) && (
+              {(membersBalance?.balance !== '' || membersBalance?.balance !== null) && (
                 <div className='mt-3'>
-                  <Alert message={`Active Balance: ₱ ${balance?.net_cash}`} type="error" showIcon />
+                  <Alert message={`Active Balance: ₱ ${membersBalance?.balance}`} type="error" showIcon />
                 </div>
               )}
             </>
@@ -156,7 +170,6 @@ export default function NetCash({ balance, gallery, userinfo }: Props) {
         </div>
       </div>
       <Collapse items={items} defaultActiveKey={['1']} />
-
       <Modal title="Net Cash Calculator" open={isModalOpen} onOk={handleOk} onCancel={handleCancel} footer={null} style={{ top: 20 }} >
         <div className="max-w-md mx-auto">
           <div className="mb-4 mt-6">
@@ -195,9 +208,9 @@ export default function NetCash({ balance, gallery, userinfo }: Props) {
                 - Prepaid interest for 15 days (₱{interest.toFixed(2)})<br />
                 - Service Fee of 1% of loaned amount (₱{serviceFee.toFixed(2)})<br />
               </div>
-              {balance?.net_cash !== '' && balance?.net_cash !== null && (
-                <div className='pl-4 mb-3'>
-                  - Previous balance: ₱{balance?.net_cash}
+              {membersBalance?.balance !== '' && membersBalance?.balance !== null && (
+                <div className='pl-4 mb-3 text-red-400'>
+                  - Previous balance: ₱{membersBalance?.balance}
                 </div>
               )}
               <label className="block mb-1 mt-4 text-gray-600 font-semibold">Amortization Schedule:</label>
@@ -213,10 +226,23 @@ export default function NetCash({ balance, gallery, userinfo }: Props) {
             </Button>
             {proceeds !== null && (
               <>
-                <Button type="primary" className='ml-3' onClick={showLargeDrawer}>
-                  Apply now!
-                </Button>
+                {membersBalance?.balance !== undefined &&
+                  membersBalance?.balance !== null &&
+                  membersBalance?.balance !== '' ? (
+                  <>
+                    <Button type="primary" danger className="ml-3" >
+                      Unable to apply, Please check your account.
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button type="primary" className="ml-3" onClick={showLargeDrawer} >
+                      Apply now!
+                    </Button>
+                  </>
+                )}
               </>
+
             )}
           </div>
         </div>
@@ -245,5 +271,6 @@ export default function NetCash({ balance, gallery, userinfo }: Props) {
         </Drawer>
       )}
     </>
+
   )
 }

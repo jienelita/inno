@@ -5,7 +5,7 @@ import { Button, Drawer, Dropdown, Input, message, Modal, Space, Table, TableCol
 import { DownOutlined } from '@ant-design/icons';
 import { formatDate, formatDateTime, memberOptions, memberStatus, membertatusTag, permissionMemberMap, statusOptions, userStatus } from '@/lib/helpers';
 import { useState } from 'react';
-import { Eye, PencilIcon, RefreshCcw } from 'lucide-react';
+import { Eye, PencilIcon, RefreshCcw, RefreshCw } from 'lucide-react';
 import UserInformation from '@/components/user/userInformation';
 import '@ant-design/v5-patch-for-react-19';
 import type { MenuInfo } from 'rc-menu/lib/interface';
@@ -221,12 +221,38 @@ function index({ user_list }: Props) {
     };
     const filteredMemberOptions = memberOptions?.filter((item) => {
         const perm = permissionMemberMap[String(item?.key)];
-
         if (perm) {
             return hasPermission(perm[0], perm[1]);
         }
         return true;
     });
+
+    const [loadingId, setLoadingId] = useState<number | null>(null);
+
+    const updatemembersDatabase = (userinfo: any) => {
+        setLoadingId(userinfo.user_id); // set the loading row's ID
+        router.post(
+            '/update-user-database',
+            {
+                records: userinfo
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setLoadingId(null); // reset when done
+                    message.success('Account successfully updated!');
+                },
+                onError: () => {
+                    setLoadingId(null);
+                    message.error('Unable to update!');
+                }
+            }
+        );
+    };
+
+    const spinStyle = {
+        animation: 'spin 1s linear infinite'
+    };
     const columns: TableColumnsType<DataType> = [
         { title: 'ID', dataIndex: 'user_id', key: 'user_id' },
         { title: 'CID', dataIndex: 'cid', key: 'cid' },
@@ -282,10 +308,18 @@ function index({ user_list }: Props) {
                         <Tooltip title="Update"><Link href={`member/${record.key}`}><Button type="link" icon={<PencilIcon />} size="small" /></Link></Tooltip>
                     )}
                     {user.is_admin === 3 && (
-                        <Tooltip title="Update Records"><Button color="red" variant="text" icon={<RefreshCcw />} size="middle" onClick={() => showDrawer(record, 2)} /></Tooltip>
+                        // <Tooltip title="Update Records"><Button color="red" variant="text" icon={<RefreshCcw />} size="middle" onClick={() => showDrawer(record, 2)} /></Tooltip>
+                        <Tooltip title="Update Records">
+                            <Button
+                                color="red"
+                                variant="text"
+                                size="middle"
+                                onClick={() => updatemembersDatabase(record)}
+                                disabled={loadingId === record.user_id}
+                            ><RefreshCw style={loadingId === record.user_id ? spinStyle : {}} /></Button>
+                        </Tooltip>
                     )}
                 </Space>
-
             )
         }
     ];

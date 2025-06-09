@@ -27,6 +27,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/loan-applications', [LoanController::class, 'loanApplications']);
         Route::post('/resend-otp', [OtpController::class, 'resend'])->name('otp.resend');
         Route::post('/verify-otp', [OtpController::class, 'verify'])->name('otp.verify');
+        Route::get('/members-balance/{membersId}/{prefixId}', [LoanController::class, 'checkBalance']);
     });
 
     Route::middleware(['auth', 'is_admin'])->group(function () {
@@ -59,6 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/user-manager/member-status', [UserManagerController::class, 'UpdateMemberStatus']);
         
         Route::get('/promisory-note/{loanId}', [LoanController::class, 'promisorynote']);
+        Route::get('/members-loan/{membersId}', [LoanController::class, 'MembersLoan']);
     });
 
     Route::get('test', [LoanController::class, 'test']);

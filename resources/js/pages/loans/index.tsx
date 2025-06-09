@@ -8,10 +8,7 @@ import '@ant-design/v5-patch-for-react-19';
 import { BookCheck, EyeIcon, Vibrate } from 'lucide-react';
 import { loanCodeMap, getLoanCodeFilters, modeMap, getStatusTag } from '@/lib/helpers'
 const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Loans',
-        href: '/loans',
-    },
+    { title: 'Loans', href: '/loan-manager' },
 ];
 
 interface LoanDetails {

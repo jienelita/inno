@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AccountBalance;
+use App\Models\BalanceAccount;
 use App\Models\LoanApplication;
 use App\Models\LoanLog;
 use App\Models\User;
@@ -146,7 +147,7 @@ class LoanController extends Controller
     public function loanCalculator()
     {
         return Inertia::render('loans/calculator', [
-            'account_balance' => AccountBalance::where('user_id', Auth::user()->id)->first(),
+            'account_balance' => BalanceAccount::where('members_id', Auth::user()->id)->where('is_balance', 1)->get(),
             'gallery' => UserImages::where('user_id', Auth::user()->id)->where('show_img', 1)->get(),
             'user' => User::find(Auth::user()->id),        ]);
     }
@@ -168,6 +169,10 @@ class LoanController extends Controller
             'status' => $status,
             'message' => $message
         ]);
+    }
+
+    public function MembersLoan($membersId){
+        
     }
 
     public function promisorynote($loan_id)
@@ -228,6 +233,10 @@ class LoanController extends Controller
             'checkby' => LoanApplication::approve($details->check_by, 'check_by'),
             'logfile' => LoanLog::where('loan_id', $id)->orderby('id','desc')->get()
         ]);
+    }
+
+    public function checkBalance($membersId, $prefixId){
+         return response()->json(BalanceAccount::where('members_id', $membersId)->where('accid', $prefixId)->first());
     }
 
     public function loanApplications(Request $request)

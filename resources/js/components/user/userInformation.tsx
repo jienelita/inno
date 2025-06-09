@@ -1,4 +1,4 @@
-import { Avatar, Col, Row } from "antd";
+import { Alert, Avatar, Col, Row } from "antd";
 import { useEffect, useState } from 'react';
 interface Props {
   user: {
@@ -43,6 +43,21 @@ export default function UserInformation({ user }: Props) {
     fetchImage();
   }, [user.user_id]);
 
+  useEffect(() => {
+    const fetchImage = async () => {
+      try {
+        const res = await fetch(`/members-loan/${user.user_id}`);
+        const data = await res.json();
+        //setMoreInfo(data || null);
+      } catch (err) {
+        console.error('Error fetching image:', err);
+      } finally {
+        //setLoading(false);
+      }
+    };
+    fetchImage();
+  }, [user.user_id]);
+
   if (loading) return <div>Loading image...</div>;
   return (
     <>
@@ -67,13 +82,15 @@ export default function UserInformation({ user }: Props) {
         </div>
       </div>
       {user?.email_verified_at === null && (
-        <>
-          <div className={`mt-3 transition-opacity duration-500 opacity-100 space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10`}>
-            <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
-              <p className="font-medium">Remarks: Email address not verify</p>
-            </div>
-          </div>
-        </>
+        <div  className='mt-2'>
+          <Alert
+            message="Remarks: Email address not verify"
+            // description=""
+            type="error"
+           
+            closable={false}
+          />
+        </div>
       )}
       {user.is_active === 2 && (
         <>
@@ -82,8 +99,8 @@ export default function UserInformation({ user }: Props) {
               <div className={`mt-3 transition-opacity duration-500 opacity-100 space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10`}>
                 <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
                   <div>
-                    <span  className="font-medium">Disabled by:</span> {moreIfo?.disable_by}<br />
-                    <span  className="font-medium">Reason:</span> {moreIfo?.reason}<br />
+                    <span className="font-medium">Disabled by:</span> {moreIfo?.disable_by}<br />
+                    <span className="font-medium">Reason:</span> {moreIfo?.reason}<br />
                   </div>
                 </div>
               </div>
@@ -98,8 +115,8 @@ export default function UserInformation({ user }: Props) {
               <div className={`mt-3 transition-opacity duration-500 opacity-100 space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10`}>
                 <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
                   <div>
-                    <span  className="font-medium">Disaproved by:</span> {moreIfo?.disaproved_by}<br />
-                    <span  className="font-medium">Reason:</span> {moreIfo?.disaproved_res}<br />
+                    <span className="font-medium">Disaproved by:</span> {moreIfo?.disaproved_by}<br />
+                    <span className="font-medium">Reason:</span> {moreIfo?.disaproved_res}<br />
                   </div>
                 </div>
               </div>

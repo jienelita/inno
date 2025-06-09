@@ -7,7 +7,6 @@ type Props = {
     };
 };
 
-
 const UserInformation = ({ data }: Props) => {
     if (!data) return <p>No user data found.</p>;
     return (

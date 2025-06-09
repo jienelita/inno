@@ -1,17 +1,14 @@
 import { AplLoanTerms, AplmodePayment, loanTerms } from '@/lib/helpers';
 import { Alert, Button, Collapse, CollapseProps, Drawer, DrawerProps, Modal, Typography } from 'antd'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Additionalrequirments from './additional-requirments';
 const { Title } = Typography;
 type Props = {
-  balance?: {
-    id: number;
-    apl_ca: string;
-  };
   gallery?: { image_name: string; image_path: string }[];
   userinfo?: {
     status: number;
     is_active: number;
+    id: number
   }
 };
 
@@ -87,7 +84,7 @@ const items: CollapseProps['items'] = [
     </>,
   },
 ];
-export default function Apl({ balance, gallery, userinfo }: Props) {
+export default function Apl({ gallery, userinfo }: Props) {
   const [isAplModalOpen, setIsAplModalOpen] = useState(false);
   const [loanAmount, setLoanAmount] = useState<number>(0);
   const [loanTerm, setLoanTerm] = useState<number>(1);
@@ -109,6 +106,23 @@ export default function Apl({ balance, gallery, userinfo }: Props) {
     2: 2, // Semi-monthly
     3: 1, // Monthly
   };
+
+  const [membersCaBalance, setmembersCaBalance] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchAllRoles = async () => {
+      try {
+        const res = await fetch(`/members-balance/${userinfo?.id}/73`);
+        const data = await res.json();
+        setmembersCaBalance(data);
+      } catch (err) {
+        console.error('Error fetching image:', err);
+      } finally {
+
+      }
+    };
+    fetchAllRoles();
+  }, []);
 
   const handleCalculate = () => {
     setError(null); // Reset error
@@ -157,11 +171,11 @@ export default function Apl({ balance, gallery, userinfo }: Props) {
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
             All Purpose Loan
           </h3>
-          {balance !== null && (
+          {membersCaBalance !== null && Object.keys(membersCaBalance).length > 0 && (
             <>
-              {balance?.apl_ca !== '' && balance?.apl_ca !== null && (
+              {membersCaBalance?.balance !== '' && membersCaBalance?.balance !== null && (
                 <div className='mt-3'>
-                  <Alert message={`Active Balance: ₱ ${balance?.apl_ca}`} type="error" showIcon />
+                  <Alert message={`Active Balance: ₱ ${membersCaBalance?.balance}`} type="error" showIcon />
                 </div>
               )}
             </>
@@ -195,6 +209,7 @@ export default function Apl({ balance, gallery, userinfo }: Props) {
               value={loanAmount}
               onChange={(e) => setLoanAmount(parseFloat(e.target.value))}
               placeholder="1000 - 4000"
+              max="4000"
             />
           </div>
           <div className="mb-4">
@@ -250,9 +265,23 @@ export default function Apl({ balance, gallery, userinfo }: Props) {
             </Button>
 
             {results && (
-              <Button type="primary" className="ml-3" onClick={showLargeDrawer} >
-                Apply now!
-              </Button>
+              <>
+                {membersCaBalance?.balance !== undefined &&
+                  membersCaBalance?.balance !== null &&
+                  membersCaBalance?.balance !== '' ? (
+                  <>
+                    <Button type="primary" danger className="ml-3" >
+                      Unable to apply, Please check your account.
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button type="primary" className="ml-3" onClick={showLargeDrawer} >
+                      Apply now!
+                    </Button>
+                  </>
+                )}
+              </>
             )}
           </div>
         </div>

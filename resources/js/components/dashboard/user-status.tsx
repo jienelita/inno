@@ -40,23 +40,23 @@ const UserStatus = ({ data, reason }: Props) => {
             )}
             {data.is_active === 0 ? (
                 <Alert
-                    message="Inactive Account"
-                    description="This account was set to inactive account by our administrator. You can send message here."
+                    message="Inactive Account. This account was set to inactive account by our administrator. You can send message here."
+                   // description=""
                     type="warning"
                     className='p-2'
                     closable={false}
                 />
             ) : data.is_active === 1 ? (
                  <Alert
-                    message="Pending Verification"
-                    description="This account was set to pending verification by our administrator. You can send message here."
+                    message="Pending Verification. This account was set to pending verification by our administrator. You can send message here."
+                    //description="This account was set to pending verification by our administrator. You can send message here."
                     type="info"
                     closable={false}
                 />
             ) : data.is_active === 2 ? (
                 <Alert
-                    message="Disable Account"
-                    description="Please contact Magrow MPC. Please read our term and policy here."
+                    message="Disable Account. Please contact Magrow MPC. Please read our term and policy here."
+                    //description=""
                     type="error"
                     closable={false}
                 />

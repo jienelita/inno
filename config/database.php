@@ -114,7 +114,7 @@ return [
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),
-            'host' => '192.168.0.234\mbwin',
+            'host' => '192.168.0.137\mbwin',
             'port' => '',
             'database' => 'Microbanker',
             'username' => 'sa',

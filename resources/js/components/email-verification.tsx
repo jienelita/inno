@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Button, Drawer, message } from "antd";
+import { Alert, Button, Drawer, message } from "antd";
 import '@ant-design/v5-patch-for-react-19';
 import Input from 'antd/es/input/Input';
 import axios from 'axios';
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 
 const EmailVerification = ({
     title = '',
@@ -53,8 +53,8 @@ const EmailVerification = ({
             if (res.data.success) {
                 message.success(res.data.message);
                 setOpen(false);
-               // setHideBox(true);
-               router.reload();
+                // setHideBox(true);
+                router.reload();
             }
         } catch (err: any) {
             message.error(err?.response?.data?.message || 'OTP verification failed.');
@@ -65,23 +65,13 @@ const EmailVerification = ({
 
     return (
         <>
-            <div className={`transition-opacity duration-500 ${hideBox
-                ? 'opacity-0 pointer-events-none'
-                : 'opacity-100 space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10'
-                }`}
-            >
-                {!hideBox && (
+            {!hideBox && (
+                <Alert message={
                     <>
-                        <div className="relative space-y-0.5 text-red-600 dark:text-red-100">
-                            <p className="font-medium">{title}</p>
-                            <p className="text-sm">{children}</p>
-                        </div>
-                        {showDetails && (
-                            <Button type="primary" onClick={showLoading}>Verify Email address</Button>
-                        )}
+                        {title} Please verify your email <a href="#" type="primary" onClick={showLoading}>here.</a> 
                     </>
-                )}
-            </div>
+                } type="error" />
+            )}
 
             <Drawer
                 closable

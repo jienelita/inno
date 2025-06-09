@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BalanceAccount;
 use App\Models\User;
 use App\Models\UserReason;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ class DashboardController extends Controller
             [
                 'user' => User::find(Auth::user()->id),
                 'disaproved_res' => UserReason::statusReturn(Auth::user()->id, 1)['reason'],
+                'balance_account' => BalanceAccount::where('members_id', Auth::user()->id)->orderby('is_balance', 'asc')->get()
             ]);
         }
     }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Alert, Button, Collapse, CollapseProps, Modal, Drawer, Typography, Space, message } from "antd";
 const { Title } = Typography;
 import type { DrawerProps } from 'antd';
@@ -84,18 +84,15 @@ const items: CollapseProps['items'] = [
   },
 ];
 type Props = {
-  balance?: {
-    id: number;
-    la_capital_share: string;
-  };
   gallery?: { image_name: string; image_path: string }[];
   userinfo?: {
     status: number;
     is_active: number;
+    id: number;
   };
 };
 
-export default function Lad({ balance, gallery, userinfo }: Props) {
+export default function Lad({ gallery, userinfo }: Props) {
 
   const [isLadModalOpen, setIsLadModalOpen] = useState(false);
 
@@ -118,6 +115,22 @@ export default function Lad({ balance, gallery, userinfo }: Props) {
   const [results, setResults] = useState<any>(null);
   const [paymentMode, setPaymentMode] = useState(2); // default to Semi-Monthly (numeric)
   const [insurance, setInsurance] = useState(0); // 0 = No, 1 = Yes
+  const [membersLadBalance, setmembersLadBalance] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchAllRoles = async () => {
+      try {
+        const res = await fetch(`/members-balance/${userinfo?.id}/79`);
+        const data = await res.json();
+        setmembersLadBalance(data);
+      } catch (err) {
+        console.error('Error fetching image:', err);
+      } finally {
+
+      }
+    };
+    fetchAllRoles();
+  }, []);
 
   const calculate = () => {
     const amount = parseFloat(loanAmount.toString());
@@ -160,7 +173,7 @@ export default function Lad({ balance, gallery, userinfo }: Props) {
     const insuranceFee = insurance === 1 ? amount * insurancefee : 0;
     const capitalRetention = amount * 0.02;
     const serviceFee = amount * serviceFeeRate;
-    const laCapitalShare = parseFloat((balance?.la_capital_share || '0').replace(/,/g, ''));
+    const laCapitalShare = parseFloat((membersLadBalance?.balance || '0').replace(/,/g, ''));
     const netProceeds = amount - capitalRetention - serviceFee - insuranceFee - laCapitalShare;
 
     // Interest
@@ -199,6 +212,7 @@ export default function Lad({ balance, gallery, userinfo }: Props) {
   const onClose = () => {
     setOpen(false);
   };
+  console.log(membersLadBalance);
   return (
     <>
       <div className="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">
@@ -209,11 +223,11 @@ export default function Lad({ balance, gallery, userinfo }: Props) {
           <p className="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
             Loans Against Deposit
           </p>
-          {balance !== null && (
+          {membersLadBalance !== null && Object.keys(membersLadBalance).length > 0 && (
             <>
-              {balance?.la_capital_share !== '' && balance?.la_capital_share !== null && (
+              {membersLadBalance?.balance !== '' && membersLadBalance?.balance !== null && (
                 <div className='mt-3'>
-                  <Alert message={`Active Balance: ₱ ${balance?.la_capital_share}`} type="error" showIcon />
+                  <Alert message={`Active Balance: ₱ ${membersLadBalance?.balance}`} type="error" showIcon />
                 </div>
               )}
             </>
@@ -298,14 +312,14 @@ export default function Lad({ balance, gallery, userinfo }: Props) {
 
               <div className='pl-4 mb-3'>- Total Interest: ₱{results.totalInterest.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
 
-              {balance?.la_capital_share !== '' && balance?.la_capital_share !== null && (
-                <div className='pl-4 mb-3'>
-                  - Previous balance: ₱{balance?.la_capital_share}
+              {membersLadBalance?.balance !== '' && membersLadBalance?.balance !== null && (
+                <div className='pl-4 mb-3 text-red-400'>
+                  - Previous balance: ₱{membersLadBalance?.balance}
                 </div>
               )}
 
               <label className="block mb-1 font-semibold text-gray-600">Net Proceeds:</label>
-              <div className='pl-4'>Net Proceeds:<span className={`font-semibold  pl-1 ${results.netProceeds < 0 ? 'text-red-900' : ''}`}>₱{results.netProceeds.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+              <div className='pl-4'>Net Proceeds:<span className={`font-semibold  pl-1 ${results.netProceeds < 0 ? 'text-red-400' : ''}`}>₱{results.netProceeds.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
 
               <label className="block mb-1 mt-4 font-semibold text-gray-600">Amortization Schedule:</label>
               <div className='pl-4'>Principal: ₱{results.principalPerPayment.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
@@ -318,9 +332,23 @@ export default function Lad({ balance, gallery, userinfo }: Props) {
               Calculate
             </Button>
             {results && (
-              <Button type="primary" className="ml-3" onClick={showLargeDrawer} >
-                Apply now!
-              </Button>
+              <>
+                  {membersLadBalance?.balance !== undefined &&
+                  membersLadBalance?.balance !== null &&
+                  membersLadBalance?.balance !== '' ? (
+                  <>
+                    <Button type="primary" danger className="ml-3" >
+                      Unable to apply, Please check your account.
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button type="primary" className="ml-3" onClick={showLargeDrawer} >
+                      Apply now!
+                    </Button>
+                  </>
+                )}
+              </>
             )}
           </div>
         </div>

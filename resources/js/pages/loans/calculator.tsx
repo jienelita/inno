@@ -27,6 +27,7 @@ export default function Calculator() {
         user?: {
             status: number;
             is_active: number;
+            id: number
         };
         account_balance?: {
             id: number;
@@ -44,18 +45,18 @@ export default function Calculator() {
         {
             key: '1',
             label: 'Net Cash',
-            children: <NetCash balance={account_balance} gallery={gallery} userinfo={user} />,
+            children: <NetCash gallery={gallery} userinfo={user} />,
 
         },
         {
             key: '2',
-            label: 'LAD',
-            children: <Lad balance={account_balance} gallery={gallery} userinfo={user} />,
+            label: 'Capital Share Loan (LAD)',
+            children: <Lad gallery={gallery} userinfo={user} />,
         },
         {
             key: '3',
-            label: 'APL (CA)',
-            children: <Apl balance={account_balance} gallery={gallery} userinfo={user} />,
+            label: 'All Purpose Loan (CA)',
+            children: <Apl gallery={gallery} userinfo={user} />,
         },
     ];
 

@@ -53,6 +53,7 @@ class RegisteredUserController extends Controller
             "birth_place" => $request->birth_place,
             "current_address" => $request->current_address,
             "permanent_address" => $request->permanent_address,
+            "is_active" => 3,
         ];
 
         $user = User::create($arr);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BalanceAccount;
 use App\Models\Role;
 use App\Models\RoleGroup;
 use App\Models\RoleList;
@@ -181,17 +182,28 @@ class UserManagerController extends Controller
     public function UpdateUserDatabase(Request $request)
     {
         $cid = str_pad($request['records']['cid'], 6, '0', STR_PAD_LEFT);
-        $results =  DB::connection('sqlsrv')
+        $members_id = $request['records']['user_id'];
+
+        if (BalanceAccount::where('members_id', $members_id)->count() > 0) {
+            BalanceAccount::where('members_id', $members_id)->delete();
+        }
+
+        DB::connection('sqlsrv')
             ->table('ClientTable')
             ->join('RELACC', 'RELACC.CID', '=', 'ClientTable.CID')
             ->where(function ($query) {
                 $query->where('RELACC.ACC', 'LIKE', '17%')
                     ->orWhere('RELACC.ACC', 'LIKE', '00%')
-                    ->orWhere('RELACC.ACC', 'LIKE', '24%');
+                    ->orWhere('RELACC.ACC', 'LIKE', '24%')
+                    ->orWhere('RELACC.ACC', 'LIKE', '87%')
+                    ->orWhere('RELACC.ACC', 'LIKE', '79%')
+                    ->orWhere('RELACC.ACC', 'LIKE', '51%')
+                    ->orWhere('RELACC.ACC', 'LIKE', '73%');
             })
             ->where('ClientTable.LastName', '!=', '')
             ->where('RELACC.CID', $cid)
-            ->get()->map(function ($item) {
+            ->get()
+            ->map(function ($item) use ($members_id) {
                 $transaction = DB::connection('sqlsrv')
                     ->table('TRNHIST')
                     ->where('Acc', $item->ACC)
@@ -210,36 +222,57 @@ class UserManagerController extends Controller
                         $balance = $svac->BalAmt / 100;
                     }
                 }
-                $accid = trim($item->ACC);
+
+                $accid = substr(trim($item->ACC), 0, 2);
                 $prefix = DB::connection('sqlsrv')
                     ->table('PRPARMS')
-                    ->where('PrType', substr($accid, 0, 2))
+                    ->where('PrType', $accid)
                     ->first()
                     ->FullDesc ?? null;
-                return [
-                    'client'   => $item,
-                    'balance'  => $balance,
-                    'prefix'   => $prefix,
+                $is_loan = 0;
+
+                if ($accid == 87 || $accid == 79 || $accid == 73 || $accid == 51 ) {
+                    $is_loan = 1;
+                }
+                
+                $arr = [
+                    "cid" => $item->CID,
+                    "account_no" => $item->ACC,
+                    "br_code" => $item->BrCode,
+                    "balance" => number_format($balance, 2),
+                    "is_balance" => $is_loan,
+                    "prefix" => $prefix,
+                    "generate_by" => Auth::user()->id,
+                    "accid" => $accid,
+                    "members_id" => $members_id
                 ];
+                if ($balance > 0) {
+                    BalanceAccount::create($arr);
+                }
             });
-        //return response()->json($results);
     }
 
     public function testQuery()
     {
         echo '<pre>';
-        $cid = str_pad('17125', 6, '0', STR_PAD_LEFT);
-        $results =  DB::connection('sqlsrv')
+        $cid = str_pad('17093', 6, '0', STR_PAD_LEFT);
+        $members_id = '3';
+        DB::connection('sqlsrv')
             ->table('ClientTable')
             ->join('RELACC', 'RELACC.CID', '=', 'ClientTable.CID')
             ->where(function ($query) {
                 $query->where('RELACC.ACC', 'LIKE', '17%')
                     ->orWhere('RELACC.ACC', 'LIKE', '00%')
-                    ->orWhere('RELACC.ACC', 'LIKE', '24%');
+                    ->orWhere('RELACC.ACC', 'LIKE', '24%')
+                    ->orWhere('RELACC.ACC', 'LIKE', '87%')
+                    ->orWhere('RELACC.ACC', 'LIKE', '79%')
+                    ->orWhere('RELACC.ACC', 'LIKE', '51%')
+                    ->orWhere('RELACC.ACC', 'LIKE', '73%');
             })
             ->where('ClientTable.LastName', '!=', '')
             ->where('RELACC.CID', $cid)
-            ->get()->map(function ($item) {
+            ->get()
+            ->map(function ($item) use ($members_id) {
                 $transaction = DB::connection('sqlsrv')
                     ->table('TRNHIST')
                     ->where('Acc', $item->ACC)
@@ -258,18 +291,30 @@ class UserManagerController extends Controller
                         $balance = $svac->BalAmt / 100;
                     }
                 }
-                $accid = trim($item->ACC);
+
+                $accid = substr(trim($item->ACC), 0, 2);
                 $prefix = DB::connection('sqlsrv')
                     ->table('PRPARMS')
-                    ->where('PrType', substr($accid, 0, 2))
+                    ->where('PrType', $accid)
                     ->first()
                     ->FullDesc ?? null;
-                print_r($item);
-                // return [
-                //     'client'   => $item,
-                //     'balance'  => $balance,
-                //     'prefix'   => $prefix,
-                // ];
+                $is_loan = 0;
+                if ($accid == 87 || $accid == 79 || $accid == 73) {
+                    $is_loan = 1;
+                }
+                $arr = [
+                    "cid" => $item->CID,
+                    "account_no" => $item->ACC,
+                    "br_code" => $item->BrCode,
+                    "balance" => number_format($balance, 2),
+                    "loan_balance" => $is_loan,
+                    "prefix" => $prefix,
+                    "generate_by" => Auth::user()->id,
+                    "accid" => $accid,
+                    "members_id" => $members_id
+                ];
+                print_r($arr);
+                // BalanceAccount::create($arr);
             });
     }
 }

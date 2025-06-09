@@ -33,5 +33,4 @@ const Deposits = ({ account }: Props) => {
     )
 }
 
-
 export default Deposits;

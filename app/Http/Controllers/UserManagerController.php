@@ -11,6 +11,7 @@ use App\Models\RoleUser;
 use App\Models\User;
 use App\Models\UserImages;
 use App\Models\UserReason;
+use App\Models\UserSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -64,6 +65,37 @@ class UserManagerController extends Controller
             ];
 
             UserReason::create($arr);
+        }
+    }
+
+    // public function DeleteRole(Request $request)
+    // {
+    //     $roleid = $request['roleId'];
+    //     if (RoleUser::where('roles_id', $roleid)->get()->count() === 0) {
+    //         Role::where('id', $roleid)->delete();
+    //         return back()->with([
+    //             'status' => 1,
+    //         ]);
+    //     } else {
+    //         return back()->with([
+    //             'status' => 2,
+    //         ]);
+    //     }
+    // }
+
+    public function DeleteUser(Request $request)
+    {
+        if (UserSession::where('user_id', $request['userid'])->get()->count() > 0) {
+            return back()->with([
+                'status' => 1,
+                'message' => 'Unable to delete user, please logout user.'
+            ]);
+        }else{
+            
+            return back()->with([
+                'status' => 2,
+                'message' => 'User successfully deleted.'
+            ]);
         }
     }
 
@@ -137,6 +169,14 @@ class UserManagerController extends Controller
             ];
             UserReason::create($arr);
         }
+    }
+
+    public function UpdateCid($userId, Request $request)
+    {
+        $arr = [
+            'cid' => $request['cid']
+        ];
+        User::where('id', $userId)->update($arr);
     }
 
     public function saveUser(Request $request)
@@ -231,10 +271,10 @@ class UserManagerController extends Controller
                     ->FullDesc ?? null;
                 $is_loan = 0;
 
-                if ($accid == 87 || $accid == 79 || $accid == 73 || $accid == 51 ) {
+                if ($accid == 87 || $accid == 79 || $accid == 73 || $accid == 51) {
                     $is_loan = 1;
                 }
-                
+
                 $arr = [
                     "cid" => $item->CID,
                     "account_no" => $item->ACC,

@@ -52,6 +52,21 @@ class RoleManagerController extends Controller
         }
     }
 
+    public function DeleteRole(Request $request)
+    {
+        $roleid = $request['roleId'];
+        if (RoleUser::where('roles_id', $roleid)->get()->count() === 0) {
+            Role::where('id', $roleid)->delete();
+            return back()->with([
+                'status' => 1,
+            ]);
+        } else {
+            return back()->with([
+                'status' => 2,
+            ]);
+        }
+    }
+
     public function UserAssignRole($userID)
     {
         return response()->json(RoleUser::Join('role', 'role.id', 'role_user.roles_id')->where('role_user.user_id', $userID)->get());
@@ -98,7 +113,8 @@ class RoleManagerController extends Controller
             }
         }
     }
-    public function CountRoleUser($roleID){
+    public function CountRoleUser($roleID)
+    {
         return response()->json(RoleUser::where('roles_id', $roleID)->get()->count());
     }
 }

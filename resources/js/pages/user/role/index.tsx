@@ -2,13 +2,14 @@ import AppLayout from '@/layouts/app-layout'
 import { type BreadcrumbItem } from '@/types';
 import '@ant-design/v5-patch-for-react-19';
 import { Head, Link, router } from '@inertiajs/react';
-import { Button, Checkbox, Drawer, Form, Input, message, Modal, Space, Table, Tooltip } from 'antd';
+import { Button, Checkbox, Drawer, Form, Input, message, Modal, Popconfirm, Space, Table, Tooltip } from 'antd';
 import { Pencil, Plus, Trash, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { FormProps, TableProps, TableColumnsType } from 'antd';
+import type { FormProps, TableProps, TableColumnsType, PopconfirmProps } from 'antd';
 import { formatDateTime } from '@/lib/helpers';
 import RoleComponents from '@/components/role/role';
 import UpdateRole from '@/components/role/UpdateRole';
+import { QuestionCircleOutlined } from '@ant-design/icons';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -42,7 +43,7 @@ interface CountList {
 
 }
 interface UserCountCellProps {
-  roleid: number; // or `string` if roleid is a string
+    roleid: number; // or `string` if roleid is a string
 }
 function roleIndex({ role, role_group }: Props) {
     const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
@@ -92,6 +93,26 @@ function roleIndex({ role, role_group }: Props) {
 
         return <>{countList}</>;
     };
+
+    const confirm = (roleId: number) => {
+        router.post(
+            '/delete-role',
+            {
+                roleId
+            },
+            {
+                preserveScroll: true,
+                onSuccess: (e) => {
+                    if (e.props.status == 2) {
+                        message.error('Unable to delete role, please remove the user first!');
+                    } else {
+                        message.success('Role successfully deleted!');
+                    }
+                },
+            }
+        );
+    };
+
     const columns: TableColumnsType<DataType> = [
         { title: 'ID', dataIndex: 'id', key: 'id' },
         { title: 'Role Name', dataIndex: 'role_name', key: 'role_name' },
@@ -124,9 +145,14 @@ function roleIndex({ role, role_group }: Props) {
                         <Button color="blue" variant="text" icon={<Pencil />} size="middle" className='me-1' onClick={() => showAssignDrawer(record.id)} />
                     </Tooltip>
 
-                    <Tooltip title="Delete Permission">
+                    <Popconfirm
+                        title="Delete the role"
+                        description="Are you sure to delete this role?"
+                        icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                        onConfirm={() => confirm(record.id)}
+                    >
                         <Button color="red" variant="text" icon={<Trash2 />} size="middle" className='me-1' />
-                    </Tooltip>
+                    </Popconfirm>
                 </>
             )
         }

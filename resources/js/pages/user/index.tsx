@@ -92,6 +92,7 @@ type PageProps = {
         user: User;
     };
 };
+
 function index({ user_list }: Props) {
     const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
     const [open, setOpen] = useState<{ open: boolean; location: number | null }>({ open: false, location: null });
@@ -253,9 +254,76 @@ function index({ user_list }: Props) {
     const spinStyle = {
         animation: 'spin 1s linear infinite'
     };
+    const [editingKey, setEditingKey] = useState<number | null>(null);
+    const [editedCid, setEditedCid] = useState<number | undefined>(undefined);
+    const [data, setData] = useState<DataType[]>(dataSource);
+
+    const saveCid = (userId: number) => {
+        if (typeof editedCid !== 'string') {
+            //message.warning('N');
+            setEditingKey(null);
+            return;
+        }
+
+        router.post(
+            `/update-cid/${userId}`, // Laravel route
+            { cid: editedCid },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setData((prev) =>
+                        prev.map((item) =>
+                            item.user_id === userId ? { ...item, cid: editedCid } : item
+                        )
+                    );
+                    setEditingKey(null);
+                    message.success('CID updated!');
+                },
+                onError: () => {
+                    message.error('Failed to update CID');
+                },
+            }
+        );
+    };
+    const allowedAdmins = [1, 3];
     const columns: TableColumnsType<DataType> = [
         { title: 'ID', dataIndex: 'user_id', key: 'user_id' },
-        { title: 'CID', dataIndex: 'cid', key: 'cid' },
+        {
+            title: 'CID',
+            dataIndex: 'cid',
+            key: 'cid',
+            render: (text, record) =>
+                editingKey === record.key && allowedAdmins.includes(user.is_admin) ? (
+                    <Input
+                        type="number"
+                        value={editedCid}
+                        style={{ width: '90px' }}
+                        onChange={(e) => {
+                            const value = e.target.value;
+                            const numericValue = value === '' ? undefined : Number(value);
+                            setEditedCid(numericValue);
+                        }}
+                        onPressEnter={() => saveCid(record.user_id)}
+                        onBlur={() => saveCid(record.user_id)}
+                        autoFocus
+                    />
+                ) : (
+                    <span
+                        onClick={() => {
+                            setEditingKey(record.user_id);
+                            setEditedCid(record.cid);
+                        }}
+                        style={{ cursor: 'pointer', color: '#1890ff' }}
+                    >
+                        {text === null ? (
+                            <>NULL</>
+                        ) : (
+                            <>{text}</>
+                        )}
+
+                    </span>
+                ),
+        },
         { title: 'Name', dataIndex: 'name', key: 'name' },
         { title: 'Email', dataIndex: 'email', key: 'email' },
         { title: 'Phone Number', dataIndex: 'phone_number', key: 'phone_number' },
@@ -307,7 +375,7 @@ function index({ user_list }: Props) {
                     {hasPermission('members-section', 'edit') && (
                         <Tooltip title="Update"><Link href={`member/${record.key}`}><Button type="link" icon={<PencilIcon />} size="small" /></Link></Tooltip>
                     )}
-                    {user.is_admin === 3 && (
+                    {user.is_admin === 3 && record.cid !== null && (
                         // <Tooltip title="Update Records"><Button color="red" variant="text" icon={<RefreshCcw />} size="middle" onClick={() => showDrawer(record, 2)} /></Tooltip>
                         <Tooltip title="Update Records">
                             <Button
@@ -357,6 +425,7 @@ function index({ user_list }: Props) {
                             }}
                             dataSource={dataSource}
                             size="middle"
+                            pagination={{ pageSize: 100 }}
                         />
 
                     </div>
@@ -364,7 +433,7 @@ function index({ user_list }: Props) {
             </div>
             <Drawer
                 title="Member Profile"
-                width={720}
+                width={open.location === 1 ? (`60%`) : (720)}
                 onClose={onClose}
                 open={open.open}
                 styles={{ body: { paddingBottom: 80 } }}

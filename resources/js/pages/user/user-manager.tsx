@@ -1,11 +1,11 @@
 import AppLayout from '@/layouts/app-layout'
 import { Head, router, Link, usePage } from '@inertiajs/react'
 import { type BreadcrumbItem } from '@/types';
-import { Button, Drawer, Dropdown, Form, Input, message, Modal, Space, Table, TableColumnsType, Tag, Tooltip } from 'antd';
-import { DownOutlined } from '@ant-design/icons';
+import { Button, Drawer, Dropdown, Form, Input, message, Modal, Popconfirm, Space, Table, TableColumnsType, Tag, Tooltip } from 'antd';
+import { DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { AdminuserStatus, isAdminCode, userStatus } from '@/lib/helpers';
 import { useEffect, useState } from 'react';
-import { Lock, LucideUserRoundCog, PencilIcon, Plus } from 'lucide-react';
+import { Lock, LucideUserRoundCog, PencilIcon, Plus, Trash2 } from 'lucide-react';
 import '@ant-design/v5-patch-for-react-19';
 import type { MenuInfo } from 'rc-menu/lib/interface';
 import AdminForm from '@/components/user/adminForm';
@@ -60,7 +60,7 @@ interface RoleGroup {
     group_name: string;
     id: number;
 }
-interface RoleList{
+interface RoleList {
     userId: number | any;
     length: number;
 }
@@ -110,7 +110,7 @@ function UserManager({ user_list, role_group }: Props) {
             };
             fetchAssignRoles();
         }, [userId]);
-        
+
         return (
             <>
                 {roleList.length === 0
@@ -129,10 +129,10 @@ function UserManager({ user_list, role_group }: Props) {
         {
             title: 'Access',
             key: 'access',
-            render: (_, record) => {                
+            render: (_, record) => {
                 return (
                     <>
-                         <UserRolesCell userId={record.id} /> 
+                        <UserRolesCell userId={record.id} />
                     </>
                 );
             },
@@ -195,7 +195,22 @@ function UserManager({ user_list, role_group }: Props) {
             message.error('Something went wrong');
         }
     };
-
+    /*
+    const deletUser = (userid: number) => {
+        router.post(
+            '/delete-user',
+            {
+                userid
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    message.success('User successfully deleted!');
+                },
+            }
+        );
+    };
+    */
     const columns: TableColumnsType<DataType> = [
         { title: 'ID', dataIndex: 'user_id', key: 'user_id' },
         { title: 'Name', dataIndex: 'name', key: 'name' },
@@ -221,9 +236,8 @@ function UserManager({ user_list, role_group }: Props) {
             key: 'operation',
             render: (_, record) => (
                 <>
-                    {record.is_admin == 2 && (
+                    {record.is_admin !== 3 ? (
                         <Tooltip placement="leftTop" title="Update User Role">
-                            {/* <Button color="purple" variant="text" icon={<LucideUserRoundCog />} size="middle" className='me-1' onClick={() => showAssignDrawer(record.user_id)} /> */}
                             <Button
                                 color="purple"
                                 variant="text"
@@ -233,6 +247,17 @@ function UserManager({ user_list, role_group }: Props) {
                                 onClick={() => showUpModal(record.user_id, 1)} // <-- fix here
                             />
                         </Tooltip>
+                    ) : (
+                        <>
+                        <Button
+                                color="purple"
+                                variant="text"
+                                icon={<LucideUserRoundCog />}
+                                size="middle"
+                                className='me-1'
+                               disabled
+                            />
+                        </>
                     )}
                     <Tooltip title="Change Password">
                         <Button color="cyan" variant="text" icon={<Lock />} size="middle" className='me-1' onClick={() => showUpModal(record.user_id, 2)} />
@@ -240,6 +265,16 @@ function UserManager({ user_list, role_group }: Props) {
                     <Tooltip placement="rightTop" title="Update">
                         <Link href={`member/${record.key}`}><Button type="link" icon={<PencilIcon />} size="small" /></Link>
                     </Tooltip>
+                    { /* 
+                    <Popconfirm
+                        title="Delete user"
+                        description="Are you sure to delete this user?"
+                        icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                        onConfirm={() => deletUser(record.user_id)}
+                    >
+                        <Button color="red" variant="text" icon={<Trash2 />} size="middle" className='me-1' />
+                    </Popconfirm>
+                    */}
                 </>
             )
         }

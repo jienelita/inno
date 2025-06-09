@@ -172,7 +172,7 @@ class LoanController extends Controller
     }
 
     public function MembersLoan($membersId){
-        
+        return response()->json(BalanceAccount::where('members_id', $membersId)->orderby('is_balance', 'asc')->get());
     }
 
     public function promisorynote($loan_id)

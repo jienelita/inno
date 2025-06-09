@@ -212,7 +212,6 @@ export default function Lad({ gallery, userinfo }: Props) {
   const onClose = () => {
     setOpen(false);
   };
-  console.log(membersLadBalance);
   return (
     <>
       <div className="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">

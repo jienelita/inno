@@ -1,5 +1,6 @@
 <?php
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DatabaseManagerController;
 use App\Http\Controllers\ImageController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\OtpController;
@@ -45,7 +46,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/user-count-role/{role_id}', [RoleManagerController::class, 'CountRoleUser']);
         Route::get('/query', [UserManagerController::class, 'testQuery']);
         Route::post('/update-user-database', [UserManagerController::class, 'UpdateUserDatabase']);
-        
+        Route::post('/delete-role', [RoleManagerController::class, 'DeleteRole']);
+        Route::post('/delete-user', [UserManagerController::class, 'DeleteUser']);
+        Route::get('/database-manager', [DatabaseManagerController::class, 'index']);
+        Route::post('/generate-database-records', [DatabaseManagerController::class, 'GenerateDatabase']);
     });
 
     Route::middleware(['auth', 'is_admin_or_any'])->group(function () {
@@ -58,9 +62,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/loan-update-status/{statusID}/{loanID}', [LoanController::class, 'loanUpdateStatus']);
         Route::post('/update-accounting/{loanid}/{status}', [LoanController::class, 'UpdateAccountingDeny']);
         Route::post('/user-manager/member-status', [UserManagerController::class, 'UpdateMemberStatus']);
-        
+        Route::post('/update-cid/{userId}', [UserManagerController::class, 'UpdateCid']);
         Route::get('/promisory-note/{loanId}', [LoanController::class, 'promisorynote']);
         Route::get('/members-loan/{membersId}', [LoanController::class, 'MembersLoan']);
+        
     });
 
     Route::get('test', [LoanController::class, 'test']);

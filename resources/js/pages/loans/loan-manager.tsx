@@ -53,6 +53,7 @@ export default function Index() {
     const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
     const [reasonText, setReasonText] = useState('');
     const [selectedLoan, setSelectedLoan] = useState<{ loanId: number; status: number } | null>(null);
+
     const { loan } = usePage().props as unknown as {
         loan: {
             data: LoanRecord[];
@@ -63,6 +64,7 @@ export default function Index() {
             name: string;
         };
     };
+    
     const { data, setData, post, get, processing, reset } = useForm({
         reason: '',
         status: 2,

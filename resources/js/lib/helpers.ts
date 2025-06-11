@@ -1,4 +1,7 @@
+import { CreditCardTwoTone } from "@ant-design/icons";
 import { MenuProps } from "antd";
+import { BadgeDollarSign, Banknote, BanknoteIcon, CreditCardIcon, DollarSign, HandCoinsIcon, IdCard, LucideBanknote, PiggyBankIcon } from "lucide-react";
+import React from "react";
 
 export const loanCodeMap: Record<number, string> = {
     1: 'Net Cash',
@@ -106,16 +109,16 @@ export const isAdminCode: Record<number, string> = {
 export function getPermissions(withStatus: number | boolean): string[] {
     const basePermissions = ['view', 'edit', 'create', 'delete'];
     let extraPermissions = [
-            'pending',
-            'approved',
-            'disapproved',
-            'validated',
-            'disbursements',
-            'reject',
-            'pre-approved',
-            'deny',
-            'crop',
-        ];
+        'pending',
+        'approved',
+        'disapproved',
+        'validated',
+        'disbursements',
+        'reject',
+        'pre-approved',
+        'deny',
+        'crop',
+    ];
     if (withStatus === 2) {
         extraPermissions = [
             'pending',
@@ -143,6 +146,37 @@ export const statusColor = (status: number) => {
             return 'orange';
         case 5:
             return 'green';
+        default:
+            return 'default';
+    }
+};
+
+export const PrefixCode = (status: any) => {
+    switch (status) {
+        case '00':
+            return React.createElement(HandCoinsIcon, {
+                className: 'inline  w-10 h-10  text-green-500',
+            });
+        case '17':
+            return React.createElement(LucideBanknote, {
+                className: 'inline  w-10 h-10  text-green-500',
+            });
+        case '24':
+            return React.createElement(CreditCardIcon, {
+                className: 'inline  w-10 h-10  text-green-500',
+            });
+        case '51':
+            return React.createElement(BadgeDollarSign, {
+                className: 'inline  w-10 h-10  text-red-500',
+            });
+        case '79':
+            return React.createElement(PiggyBankIcon, {
+                className: 'inline  w-10 h-10  text-red-500',
+            });
+        case '73':
+            return React.createElement(CreditCardTwoTone, {
+                className: 'inline  w-10 h-10  text-red-500',
+            });
         default:
             return 'default';
     }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class LoanApplication extends Model
@@ -35,7 +36,27 @@ class LoanApplication extends Model
     public static function approve($approve_by, $table_name)
     {
         return LoanApplication::selectraw('users.name, loan_application.approve_by')
-            ->join('users', 'users.id', 'loan_application.'.$table_name)
+            ->join('users', 'users.id', 'loan_application.' . $table_name)
             ->where('users.id', $approve_by)->first();
+    }
+    public static function LoanCount($status = null)
+    {
+        $query = LoanApplication::query()
+            ->whereBetween('created_at', [
+                Carbon::now()->startOfMonth(),
+                Carbon::now()->endOfMonth(),
+            ]);
+
+        if (!is_null($status)) {
+            if ($status == 1) {
+                $query->where(function ($q) {
+                    $q->where('status', 1)->orWhere('status', 5);
+                });
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
+        return $query->get();
     }
 }

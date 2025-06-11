@@ -208,7 +208,7 @@ export default function Index() {
             render: (_: any, record: LoanRecord) => (
                 <>
                     <Link href={`/loan/view/${record.id}`} className="text-link mr-4">View</Link>
-                    <Popconfirm
+                    {/* <Popconfirm
                         title="Delete the loan"
                         description="Are you sure you want to delete this loan?"
                         onConfirm={() => confirmDelete(record.id)}
@@ -220,7 +220,7 @@ export default function Index() {
                         <Tooltip title={record.status === 1 ? 'Cannot delete approved loan' : ''}>
                             <Button danger disabled={record.status === 1}>Delete</Button>
                         </Tooltip>
-                    </Popconfirm>
+                    </Popconfirm> */}
                 </>
             ),
         },

@@ -29,6 +29,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/resend-otp', [OtpController::class, 'resend'])->name('otp.resend');
         Route::post('/verify-otp', [OtpController::class, 'verify'])->name('otp.verify');
         Route::get('/members-balance/{membersId}/{prefixId}', [LoanController::class, 'checkBalance']);
+        Route::get('/payment-history', [LoanController::class, 'PaymentHistory']);
+        Route::get('/account-history/{account}/{cid}', [LoanController::class, 'AccountHistory']);
     });
 
     Route::middleware(['auth', 'is_admin'])->group(function () {
@@ -44,7 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/user-password-update', [UserManagerController::class, 'UpdatePassword']);
         Route::post('/update-role/{roleid}', [RoleManagerController::class, 'updateRole']);
         Route::get('/user-count-role/{role_id}', [RoleManagerController::class, 'CountRoleUser']);
-        Route::get('/query', [UserManagerController::class, 'testQuery']);
+        
         Route::post('/update-user-database', [UserManagerController::class, 'UpdateUserDatabase']);
         Route::post('/delete-role', [RoleManagerController::class, 'DeleteRole']);
         Route::post('/delete-user', [UserManagerController::class, 'DeleteUser']);
@@ -70,6 +72,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('test', [LoanController::class, 'test']);
     Route::post('update-id-image', [ImageController::class, 'UpdateImage']);
+    Route::get('/query', [UserManagerController::class, 'testQuery']);
 });
 
 Route::get('/check-cid', function (Request $request) {

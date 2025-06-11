@@ -16,6 +16,7 @@ class BalanceAccount extends Model
         "generate_by",
         "accid",
         "members_id",
-        "is_balance"
+        "is_balance",
+        "chd"
     ];
 }

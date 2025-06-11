@@ -201,7 +201,7 @@ export default function NetCash({ gallery, userinfo }: Props) {
           {proceeds !== null && (
             <div className="mt-4 mb-5">
               <label className="block mb-1 text-gray-600 font-semibold">Net Proceeds:</label>
-              <div className='pl-4'>- <span className='font-medium'> ₱ {proceeds.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+              <div className='pl-4'>- <span className={`font-semibold  pl-1 ${proceeds < 0 ? 'text-red-400' : ''}`}> ₱ {proceeds.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
 
               <label className="block mb-1 text-gray-600 font-semibold">Deductions:</label>
               <div className='pl-4'>
@@ -224,7 +224,23 @@ export default function NetCash({ gallery, userinfo }: Props) {
             <Button type="primary" onClick={handleCalculate}>
               Calculate
             </Button>
-            {proceeds !== null && (
+
+            {results &&  (
+              <>
+             
+                {proceeds !== null && proceeds < 0 ? (
+                  <Button type="primary" danger className="ml-3" >
+                    Insufficient Balance.
+                  </Button>
+                ) : (
+                  <Button type="primary" className="ml-3" onClick={showLargeDrawer} >
+                    Apply now!
+                  </Button>
+                )}
+              </>
+            )}
+
+            {/* {proceeds !== null && (
               <>
                 {membersBalance?.balance !== undefined &&
                   membersBalance?.balance !== null &&
@@ -242,8 +258,8 @@ export default function NetCash({ gallery, userinfo }: Props) {
                   </>
                 )}
               </>
+            )} */}
 
-            )}
           </div>
         </div>
       </Modal >

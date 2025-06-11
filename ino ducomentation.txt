@@ -31,12 +31,10 @@ Errolflynn07
 
 to do
 
-View Profile (direct)
 
-Need to show the loan balance
-
-Route::get('/members-loan/{membersId}', [LoanController::class, 'MembersLoan']);
-
-C:\Users\HomePC\Desktop\Project\inno\resources\js\components\user\userInformation.tsx <--- need to continue @ effect Section
+database manager need to have the actual records.
+dashboard section need graph need actual records.
 
 
+-- Optional since we are looking for cron jobs
+need to update the database manager for auto update for every 10 minutes

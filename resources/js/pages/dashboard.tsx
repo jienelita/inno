@@ -28,6 +28,7 @@ const Dashboard = ({ disaproved_res, balance_account }: Props) => {
         }
     };
     const user = props.user;
+    
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />

@@ -113,7 +113,7 @@ interface UserType {
     status: number
 }
 export default function ViewDetails({ details, documents, img_data, approve_by, checkby, logfile }: Props) {
-    console.log(logfile);
+    
     const { data, post, setData, reset } = useForm({
         reason: '',
         reason_deny: '',
@@ -379,7 +379,7 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
+                        <div className="hidden flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
                             <button className="flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
                                 <svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M11.6666 11.2503H13.7499L14.5833 7.91699H11.6666V6.25033C11.6666 5.39251 11.6666 4.58366 13.3333 4.58366H14.5833V1.78374C14.3118 1.7477 13.2858 1.66699 12.2023 1.66699C9.94025 1.66699 8.33325 3.04771 8.33325 5.58342V7.91699H5.83325V11.2503H8.33325V18.3337H11.6666V11.2503Z" fill=""></path>
@@ -414,14 +414,18 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
                                 Edit
                             </Link>
                         )}
-                        {hasPermission('members-section', 'view') && (
+                        
+                        {/* {hasPermission('members-section', 'view') && ( */}
+                            {user.is_admin !== 0 && (
                             <button onClick={() => showDrawer(details)} className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"  >
                                 <svg className="fill-current" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M3.5 12C3.5 7.30558 7.30558 3.5 12 3.5C16.6944 3.5 20.5 7.30558 20.5 12C20.5 16.6944 16.6944 20.5 12 20.5C7.30558 20.5 3.5 16.6944 3.5 12ZM12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM11.0991 7.52507C11.0991 8.02213 11.5021 8.42507 11.9991 8.42507H12.0001C12.4972 8.42507 12.9001 8.02213 12.9001 7.52507C12.9001 7.02802 12.4972 6.62507 12.0001 6.62507H11.9991C11.5021 6.62507 11.0991 7.02802 11.0991 7.52507ZM12.0001 17.3714C11.5859 17.3714 11.2501 17.0356 11.2501 16.6214V10.9449C11.2501 10.5307 11.5859 10.1949 12.0001 10.1949C12.4143 10.1949 12.7501 10.5307 12.7501 10.9449V16.6214C12.7501 17.0356 12.4143 17.3714 12.0001 17.3714Z" fill=""></path>
                                 </svg>
                                 View
                             </button>
-                        )}
+                            )}
+                        {/* )} */}
+                        
                     </>
                 </div>
             </div>
@@ -721,7 +725,7 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
             </div >
             <Drawer
                 title="Member Profile"
-                width={720}
+                width={'60%'}
                 onClose={onClose}
                 open={open}
                 styles={{ body: { paddingBottom: 80 } }}

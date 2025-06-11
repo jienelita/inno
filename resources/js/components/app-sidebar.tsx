@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookCheck, BookOpen, Calculator, CalendarClock, Cog, Database, Folder, HandCoins, LayoutGrid, List, PiggyBank, Shield, User, UserCog, UserCog2Icon, Users } from 'lucide-react';
+import { BookCheck, BookOpen, Calculator, CalendarClock, Cog, Database, Folder, HandCoins, History, LayoutGrid, List, PiggyBank, Shield, User, UserCog, UserCog2Icon, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 import { usePermission } from '@/hooks/usePermission';
 
@@ -49,6 +49,11 @@ export function AppSidebar() {
                             title: 'Loan Calculator',
                             href: '/loan/loan-calculator',
                             icon: Calculator,
+                        },
+                        {
+                            title: 'Payment History',
+                            href: '/payment-history',
+                            icon: History,
                         },
                     ],
                 },

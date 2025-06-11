@@ -30,7 +30,7 @@ const BasicChart = () => {
         }
     ];
     return (
-        <div className="rounded-lg p-4 shadow bg-white dark:bg-gray-800">
+        <div className="rounded-lg p-4 shadow bg-white dark:bg-gray-800  min-h-[350px]">
             <Chart
                 options={chartOptions}
                 series={chartSeries}

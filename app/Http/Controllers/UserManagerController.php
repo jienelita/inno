@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BalanceAccount;
+use App\Models\PaymentHistory;
 use App\Models\Role;
 use App\Models\RoleGroup;
 use App\Models\RoleList;
@@ -90,8 +91,8 @@ class UserManagerController extends Controller
                 'status' => 1,
                 'message' => 'Unable to delete user, please logout user.'
             ]);
-        }else{
-            
+        } else {
+
             return back()->with([
                 'status' => 2,
                 'message' => 'User successfully deleted.'
@@ -271,20 +272,19 @@ class UserManagerController extends Controller
                     ->FullDesc ?? null;
                 $is_loan = 0;
 
-                if ($accid == 87 || $accid == 79 || $accid == 73 || $accid == 51) {
-                    $is_loan = 1;
-                }
+                $is_loan = in_array($accid, [87, 79, 73, 51]) ? 1 : 0;
 
                 $arr = [
                     "cid" => $item->CID,
-                    "account_no" => $item->ACC,
+                    "account_no" => trim($item->ACC),
                     "br_code" => $item->BrCode,
                     "balance" => number_format($balance, 2),
                     "is_balance" => $is_loan,
                     "prefix" => $prefix,
                     "generate_by" => Auth::user()->id,
                     "accid" => $accid,
-                    "members_id" => $members_id
+                    "members_id" => $members_id,
+                    'chd' => $item->Chd
                 ];
                 if ($balance > 0) {
                     BalanceAccount::create($arr);
@@ -292,70 +292,10 @@ class UserManagerController extends Controller
             });
     }
 
-    public function testQuery()
+    public function testQuery(Request $request)
     {
-        echo '<pre>';
-        $cid = str_pad('17093', 6, '0', STR_PAD_LEFT);
-        $members_id = '3';
-        DB::connection('sqlsrv')
-            ->table('ClientTable')
-            ->join('RELACC', 'RELACC.CID', '=', 'ClientTable.CID')
-            ->where(function ($query) {
-                $query->where('RELACC.ACC', 'LIKE', '17%')
-                    ->orWhere('RELACC.ACC', 'LIKE', '00%')
-                    ->orWhere('RELACC.ACC', 'LIKE', '24%')
-                    ->orWhere('RELACC.ACC', 'LIKE', '87%')
-                    ->orWhere('RELACC.ACC', 'LIKE', '79%')
-                    ->orWhere('RELACC.ACC', 'LIKE', '51%')
-                    ->orWhere('RELACC.ACC', 'LIKE', '73%');
-            })
-            ->where('ClientTable.LastName', '!=', '')
-            ->where('RELACC.CID', $cid)
-            ->get()
-            ->map(function ($item) use ($members_id) {
-                $transaction = DB::connection('sqlsrv')
-                    ->table('TRNHIST')
-                    ->where('Acc', $item->ACC)
-                    ->orderBy('Recid', 'DESC')
-                    ->first();
-
-                $svac = DB::connection('sqlsrv')
-                    ->table('SVACC')
-                    ->where('Acc', $item->ACC)
-                    ->first();
-
-                $balance = 0;
-                if ($transaction) {
-                    $balance = $transaction->BalAmt / 100;
-                    if ($svac && $svac->PrType == 24) {
-                        $balance = $svac->BalAmt / 100;
-                    }
-                }
-
-                $accid = substr(trim($item->ACC), 0, 2);
-                $prefix = DB::connection('sqlsrv')
-                    ->table('PRPARMS')
-                    ->where('PrType', $accid)
-                    ->first()
-                    ->FullDesc ?? null;
-                $is_loan = 0;
-                if ($accid == 87 || $accid == 79 || $accid == 73) {
-                    $is_loan = 1;
-                }
-                $arr = [
-                    "cid" => $item->CID,
-                    "account_no" => $item->ACC,
-                    "br_code" => $item->BrCode,
-                    "balance" => number_format($balance, 2),
-                    "loan_balance" => $is_loan,
-                    "prefix" => $prefix,
-                    "generate_by" => Auth::user()->id,
-                    "accid" => $accid,
-                    "members_id" => $members_id
-                ];
-                print_r($arr);
-                // BalanceAccount::create($arr);
-            });
-    }
+        $accNo = trim('1708838');
+        $cid = 17093;
+        //$this->GeneratePaymentHistory($request);
+    }   
 }
-//MagrowMPC143_

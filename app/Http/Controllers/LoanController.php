@@ -6,6 +6,7 @@ use App\Models\AccountBalance;
 use App\Models\BalanceAccount;
 use App\Models\LoanApplication;
 use App\Models\LoanLog;
+use App\Models\PaymentHistory;
 use App\Models\User;
 use App\Models\UserImages;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -86,6 +87,17 @@ class LoanController extends Controller
         ]);
     }
 
+    public function PaymentHistory()
+    {
+        return Inertia::render('loans/payment-history', [
+           'account' => BalanceAccount::where('members_id', Auth::user()->id)->get()
+        ]);
+    }
+
+    public function AccountHistory($acountNo, $cid){
+        return response()->json(PaymentHistory::where('acc_no', $acountNo)->where('cid', $cid)->orderby('recid', 'desc')->get());
+    }
+
     public function loanUpdateStatus($statusID, $loanID)
     {
         $arr = [
@@ -149,7 +161,8 @@ class LoanController extends Controller
         return Inertia::render('loans/calculator', [
             'account_balance' => BalanceAccount::where('members_id', Auth::user()->id)->where('is_balance', 1)->get(),
             'gallery' => UserImages::where('user_id', Auth::user()->id)->where('show_img', 1)->get(),
-            'user' => User::find(Auth::user()->id),        ]);
+            'user' => User::find(Auth::user()->id),
+        ]);
     }
 
     public function delete($id)
@@ -171,7 +184,8 @@ class LoanController extends Controller
         ]);
     }
 
-    public function MembersLoan($membersId){
+    public function MembersLoan($membersId)
+    {
         return response()->json(BalanceAccount::where('members_id', $membersId)->orderby('is_balance', 'asc')->get());
     }
 
@@ -231,12 +245,13 @@ class LoanController extends Controller
             'img_data' => $img_is,
             'approve_by' => LoanApplication::approve($details->approve_by, 'approve_by'),
             'checkby' => LoanApplication::approve($details->check_by, 'check_by'),
-            'logfile' => LoanLog::where('loan_id', $id)->orderby('id','desc')->get()
+            'logfile' => LoanLog::where('loan_id', $id)->orderby('id', 'desc')->get()
         ]);
     }
 
-    public function checkBalance($membersId, $prefixId){
-         return response()->json(BalanceAccount::where('members_id', $membersId)->where('accid', $prefixId)->first());
+    public function checkBalance($membersId, $prefixId)
+    {
+        return response()->json(BalanceAccount::where('members_id', $membersId)->where('accid', $prefixId)->first());
     }
 
     public function loanApplications(Request $request)

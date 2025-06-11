@@ -332,7 +332,19 @@ export default function Lad({ gallery, userinfo }: Props) {
             </Button>
             {results && (
               <>
-                  {membersLadBalance?.balance !== undefined &&
+                {results.netProceeds < 0 ? (
+                  <Button type="primary" danger className="ml-3" >
+                    Insufficient Balance.
+                  </Button>
+                ) : (
+                  <Button type="primary" className="ml-3" onClick={showLargeDrawer} >
+                    Apply now!
+                  </Button>
+                )}
+              </>
+            )}
+
+            {/* {membersLadBalance?.balance !== undefined && 
                   membersLadBalance?.balance !== null &&
                   membersLadBalance?.balance !== '' ? (
                   <>
@@ -341,14 +353,9 @@ export default function Lad({ gallery, userinfo }: Props) {
                     </Button>
                   </>
                 ) : (
-                  <>
-                    <Button type="primary" className="ml-3" onClick={showLargeDrawer} >
-                      Apply now!
-                    </Button>
-                  </>
+                 
                 )}
-              </>
-            )}
+              */}
           </div>
         </div>
       </Modal >

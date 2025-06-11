@@ -137,6 +137,7 @@ export default function Apl({ gallery, userinfo }: Props) {
       setError('Please select loan term and payment mode.');
       return;
     }
+    const balance = parseFloat((membersCaBalance?.balance || '0').replace(/,/g, ''));
     const annualInterestRate = 0.36;
     const monthlyInterestRate = annualInterestRate / 12;
     const totalMonths = loanTerm;
@@ -145,8 +146,8 @@ export default function Apl({ gallery, userinfo }: Props) {
     const serviceFee = 50 + loanAmount * 0.005;
     const totalPayable = loanAmount + totalInterest;
     const interestPerPayment = totalPayable / periods;
-    const netProceeds = loanAmount - serviceFee;
-
+    const netProceeds = loanAmount - serviceFee - balance;
+    console.log(netProceeds);
     setResult({
       totalInterest,
       serviceFee,
@@ -251,10 +252,12 @@ export default function Apl({ gallery, userinfo }: Props) {
             <div className="mt-6 space-y-2 text-sm text-gray-800">
               <p>- Total Interest: ₱{results.totalInterest.toFixed(2)}</p>
               <p>- Service Fee: ₱{results.serviceFee.toFixed(2)}</p>
-              <p>- Net Cash: ₱{results.netProceeds.toFixed(2)}</p>
+              <p>- Net Proceeds: ₱ <span className={`font-semibold  pl-1 ${results.netProceeds < 0 ? 'text-red-400' : ''}`}>
+                {results.netProceeds.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span></p>
               <p>
                 - Installment Amount (x{results.totalPayments}): ₱
-                {results.interestPerPayment.toFixed(2)}
+                {results.interestPerPayment.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </p>
             </div>
           )}
@@ -265,6 +268,20 @@ export default function Apl({ gallery, userinfo }: Props) {
             </Button>
 
             {results && (
+              <>
+                {results.netProceeds < 0 ? (
+                  <Button type="primary" danger className="ml-3" >
+                    Insufficient Balance.
+                  </Button>
+                ) : (
+                  <Button type="primary" className="ml-3" onClick={showLargeDrawer} >
+                    Apply now!
+                  </Button>
+                )}
+              </>
+            )}
+
+            {/* {results && (
               <>
                 {membersCaBalance?.balance !== undefined &&
                   membersCaBalance?.balance !== null &&
@@ -282,7 +299,7 @@ export default function Apl({ gallery, userinfo }: Props) {
                   </>
                 )}
               </>
-            )}
+            )} */}
           </div>
         </div>
       </Modal>

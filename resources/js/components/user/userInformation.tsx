@@ -16,6 +16,7 @@ interface Props {
     email: string;
     email_verified_at: string;
     status: number;
+    
   };
 }
 interface UserMoreInfo {
@@ -31,6 +32,8 @@ type LoanRecord = {
   balance: number;
   account_no: string;
   is_balance: number;
+  chd: number;
+  accid: number;
 };
 
 export default function UserInformation({ user }: Props) {
@@ -79,7 +82,7 @@ export default function UserInformation({ user }: Props) {
             <div style={acc.is_balance === 1 ? style : style2} className="border-sidebar-border/70 dark:border-sidebar-border relative  overflow-hidden rounded-xl border mb-2">
               <div className="p-4 md:p-4">
                 <p className="text-theme-sm text-gray-700 dark:text-gray-400">
-                  {acc.prefix}
+                  {acc.prefix} <b>{Number(acc.chd) === 1 && Number(acc.accid) === 51 && ( <><br />(Co-maker) </> )}</b>
                 </p>
                 <h4 className="text-2xl font-bold text-gray-800 dark:text-white/90">
                   &#8369; {acc.balance}
@@ -91,7 +94,7 @@ export default function UserInformation({ user }: Props) {
                   <div className="flex items-center gap-1">
 
                     <span className="text-theme-xs text-gray-700 dark:text-gray-400">
-                      <b>{acc.account_no}</b>
+                      <b>{acc.account_no}-{acc.chd}</b>
                     </span>
                   </div>
                 </div>

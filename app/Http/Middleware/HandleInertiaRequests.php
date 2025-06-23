@@ -40,8 +40,7 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
         if (Auth::check() == true) {
-
-            if (auth()->user()->is_admin == 3) {
+            if (Auth::user()->is_admin == 3) {
                 return [
                     ...parent::share($request),
                     'name' => config('app.name'),
@@ -49,18 +48,32 @@ class HandleInertiaRequests extends Middleware
                     'auth' => [
                         'user' => $request->user(),
                     ],
-                    'is_admin' => auth()->user()->is_admin,
+                    'is_admin' => Auth::user()->is_admin,
                     'ziggy' => fn(): array => [
                         ...(new Ziggy)->toArray(),
                         'location' => $request->url(),
                     ],
                     'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
                 ];
-            } else {
+            } elseif(Auth::user()->is_admin == 0) {
+                return [
+                    ...parent::share($request),
+                    'name' => config('app.name'),
+                    'quote' => ['message' => trim($message), 'author' => trim($author)],
+                    'auth' => [
+                        'user' => $request->user(),
+                    ],
+                    'is_admin' => 0,
+                    'ziggy' => fn(): array => [
+                        ...(new Ziggy)->toArray(),
+                        'location' => $request->url(),
+                    ],
+                    'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+                ];
+            }else{
                 $permission = session()->all();
                 $permissions = $permission['user_role'];
                 $user = $request->user();
-
                 return [
                     ...parent::share($request),
                     'name' => config('app.name'),
@@ -74,7 +87,7 @@ class HandleInertiaRequests extends Middleware
                             'capability' => $perm->capability,
                         ])->values()->all()
                         : [],
-                    'is_admin' => auth()->user()->is_admin,
+                    'is_admin' => Auth::user()->is_admin,
                     'ziggy' => fn(): array => [
                         ...(new Ziggy)->toArray(),
                         'location' => $request->url(),
@@ -97,5 +110,6 @@ class HandleInertiaRequests extends Middleware
                 'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             ];
         }
+        die();
     }
 }

@@ -14,7 +14,8 @@ class UserImages extends Model
         "image_tag",
         "loan_id",
         "show_img",
-        "image_mapping"
+        "image_mapping",
+        "original_name"
     ];
 
     public static function useravatar($user_id){

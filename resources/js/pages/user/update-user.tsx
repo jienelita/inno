@@ -1,8 +1,8 @@
 import AppLayout from '@/layouts/app-layout'
-import { Head } from '@inertiajs/react'
+import { Head, router } from '@inertiajs/react'
 import { type BreadcrumbItem } from '@/types';
-import { Modal } from 'antd';
-import { useState } from 'react';
+import { Avatar, Modal } from 'antd';
+import { useEffect, useState } from 'react';
 import '@ant-design/v5-patch-for-react-19';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -22,26 +22,49 @@ interface Props {
         last_name: string;
         middle_name: string;
         email: string;
-        phone_number: number
+        phone_number: string
         cid: number
         bithdate: string;
         birth_place: string;
         permanent_address: string;
         current_address: string;
-        name: string
+        name: string;
+        id: number
     };
+    image_name: string;
 }
 
-function index({ user_details }: Props) {
+function index({ user_details, image_name }: Props) {
     const [isModalOpenPesonalInfo, setIsModalOpenPersonalInfo] = useState(false);
     const [isModalOpenAddress, setIsModalOpenAddress] = useState(false);
+    const [formData, setFormData] = useState({
+        current_address: user_details.current_address,
+        permanent_address: user_details.permanent_address,
+        user_id: user_details.id,
+        first_name: user_details.first_name,
+        last_name: user_details.last_name,
+        email_address: user_details.email,
+        phone_number: user_details.phone_number,
+        bithdate: user_details.bithdate,
+        birth_place: user_details.birth_place,
+    });
 
     const showEditPersonalModal = () => {
         setIsModalOpenPersonalInfo(true);
     };
     const handleOk = () => {
-        setIsModalOpenPersonalInfo(false);
-        setIsModalOpenAddress(false);
+        router.post('/update-user',
+            formData, {
+            forceFormData: true,
+            onSuccess: () => {
+                setIsModalOpenPersonalInfo(false);
+                setIsModalOpenAddress(false);
+            },
+            onError: () => {
+
+            },
+        });
+
     };
     const handleCancel = () => {
         setIsModalOpenPersonalInfo(false);
@@ -51,10 +74,25 @@ function index({ user_details }: Props) {
     const showEditAddressModal = () => {
         setIsModalOpenAddress(true);
     };
-    
+
+    useEffect(() => {
+        if (isModalOpenAddress && user_details) {
+            setFormData({
+                current_address: user_details.current_address || '',
+                permanent_address: user_details.permanent_address || '',
+                user_id: user_details.id || 0,
+                first_name: user_details.first_name || '',
+                last_name: user_details.last_name || '',
+                email_address: user_details.email || '',
+                phone_number: user_details.phone_number || '',
+                bithdate: user_details.bithdate || '',
+                birth_place: user_details.birth_place || '',
+            });
+        }
+    }, [isModalOpenAddress, user_details]);
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Loans" />
+            <Head title="Update User" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
                     <div className="p-4 md:p-4">
@@ -65,7 +103,7 @@ function index({ user_details }: Props) {
                             <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
                                 <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
                                     <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
-                                        {/* <img src="" alt="user" /> */}
+                                        <Avatar size={{ xs: 24, sm: 32, md: 40, lg: 64, xl: 80, xxl: 100 }} src={`/images/${image_name}`} />
                                     </div>
                                     <div className="order-3 xl:order-2">
                                         <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 xl:text-left">
@@ -74,11 +112,12 @@ function index({ user_details }: Props) {
                                         <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
 
                                             <p className="text-sm text-gray-500 dark:text-gray-400">
-                                                <b>CID: {user_details.cid}</b>
+                                                <b>CID: {user_details.cid}</b><br />
+                                                <b>ID: {user_details.id}</b>
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
+                                    <div className="hidden flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
                                         <button className="flex h-11 w-11 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
                                             <svg className="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <path d="M11.6666 11.2503H13.7499L14.5833 7.91699H11.6666V6.25033C11.6666 5.39251 11.6666 4.58366 13.3333 4.58366H14.5833V1.78374C14.3118 1.7477 13.2858 1.66699 12.2023 1.66699C9.94025 1.66699 8.33325 3.04771 8.33325 5.58342V7.91699H5.83325V11.2503H8.33325V18.3337H11.6666V11.2503Z" fill=""></path>
@@ -231,8 +270,7 @@ function index({ user_details }: Props) {
                     open={isModalOpenPesonalInfo}
                     onOk={handleOk}
                     onCancel={handleCancel}
-                    width={800}
-                >
+                    width={800}>
                     <div className="px-2 pr-14">
                         <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
                             Edit Personal Information
@@ -243,7 +281,7 @@ function index({ user_details }: Props) {
                     </div>
                     <form className="flex flex-col  mb-5">
                         <div className="custom-scrollbar h-[460px] overflow-y-auto px-2  mb-5">
-                            <div>
+                            {/* <div className="hidden">
                                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
                                     Social Links
                                 </h5>
@@ -253,32 +291,32 @@ function index({ user_details }: Props) {
                                         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                                             Facebook
                                         </label>
-                                        <input type="text" value="https://www.facebook.com/PimjoHQ" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
+                                        <input type="text" value="" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800" />
                                     </div>
 
                                     <div>
                                         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                                             X.com
                                         </label>
-                                        <input type="text" value="https://x.com/PimjoHQ" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
+                                        <input type="text" value="" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800" />
                                     </div>
 
                                     <div>
                                         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                                             Linkedin
                                         </label>
-                                        <input type="text" value="https://linkedin.com/PimjoHQ" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
+                                        <input type="text" value="" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800" />
                                     </div>
 
                                     <div>
                                         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                                             Instagram
                                         </label>
-                                        <input type="text" value="https://instagram.com/PimjoHQ" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
+                                        <input type="text" value="" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800" />
                                     </div>
                                 </div>
-                            </div>
-                            <div className="mt-7  mb-10">
+                            </div> */}
+                            <div className="mb-10">
                                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
                                     Personal Information
                                 </h5>
@@ -288,35 +326,71 @@ function index({ user_details }: Props) {
                                         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                                             First Name
                                         </label>
-                                        <input type="text" value="Musharof" className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
+                                        <input type="text"
+                                            value={formData.first_name}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, first_name: e.target.value })
+                                            }
+                                            className="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800" />
                                     </div>
 
                                     <div className="col-span-2 lg:col-span-1">
                                         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                                             Last Name
                                         </label>
-                                        <input type="text" value="Chowdhury" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
+                                        <input type="text"
+                                            value={formData.last_name}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, last_name: e.target.value })
+                                            }
+                                            className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800" />
                                     </div>
 
                                     <div className="col-span-2 lg:col-span-1">
                                         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                                             Email Address
                                         </label>
-                                        <input type="text" value="randomuser@pimjo.com" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
+                                        <input type="text"
+                                            readOnly disabled
+                                            value={formData.email_address}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, email_address: e.target.value })
+                                            } className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800" />
                                     </div>
 
                                     <div className="col-span-2 lg:col-span-1">
                                         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                                             Phone
                                         </label>
-                                        <input type="text" value="+09 363 398 46" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
+                                        <input type="text"
+                                            value={formData.phone_number}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, phone_number: e.target.value })
+                                            } className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800" />
                                     </div>
 
                                     <div className="col-span-2">
                                         <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                                            Bio
+                                            Birth Date
                                         </label>
-                                        <input type="text" value="Team Manager" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
+                                        <input type="date"
+                                            value={formData.bithdate}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, bithdate: e.target.value })
+                                            }
+                                            className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800" />
+                                        <i>M/d/Y</i>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                            Birth Place
+                                        </label>
+                                        <input type="text"
+                                            value={formData.birth_place}
+                                            onChange={(e) =>
+                                                setFormData({ ...formData, birth_place: e.target.value })
+                                            }
+                                            className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800" />
                                     </div>
                                 </div>
                             </div>
@@ -345,19 +419,26 @@ function index({ user_details }: Props) {
                             <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                                 <div>
                                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                                        Country
+                                        Current Address
                                     </label>
-                                    <input type="text" value="United States" className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
+                                    <input type="text"
+                                        value={formData.current_address}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, current_address: e.target.value })
+                                        }
+                                        className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800" />
                                 </div>
 
                                 <div>
                                     <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
                                         City/State
                                     </label>
-                                    <input type="text" value="Arizona, United States." className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
+                                    <input type="text"
+                                        value={formData.permanent_address}
+                                        onChange={(e) =>
+                                            setFormData({ ...formData, permanent_address: e.target.value })
+                                        } className="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none px-4 py-2.5 text-sm text-gray-800" />
                                 </div>
-
-
                             </div>
                         </div>
                     </form>

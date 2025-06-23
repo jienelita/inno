@@ -80,42 +80,6 @@ const Additionalrequirments: React.FC<AdditionalRequirmentsProps> = ({ loanData,
     }
   };
 
-  // const handleUploadChange = (info: any) => {
-  //   const latestFile = info.fileList?.[info.fileList.length - 1]?.originFileObj;
-  //   if (!latestFile) return;
-  //   const reader = new FileReader();
-  //   reader.onload = (e) => {
-  //     const base64 = e.target?.result as string;
-  //     if (currentUploadType === 'magrow') {
-  //       setMagrowImage(latestFile);
-  //       setMagrowPreview(base64);
-  //     } else if (currentUploadType === 'valid') {
-  //       setValidImage(latestFile);
-  //       setValidPreview(base64);
-  //     }
-  //   };
-  //   reader.readAsDataURL(latestFile);
-  //   setModalVisible(false);
-  // };
-
-
-  // const handleCapturePhoto = () => {
-  //   if (!webcamRef.current) return;
-  //   const screenshot = webcamRef.current.getScreenshot();
-  //   if (screenshot) {
-  //     const photoFile = base64ToFile(screenshot, `photo_${Date.now()}.jpg`);
-
-  //     if (currentUploadType === 'magrow') {
-  //       setMagrowImage(photoFile);
-  //       setMagrowPreview(screenshot); // for preview
-  //     } else if (currentUploadType === 'valid') {
-  //       setValidImage(photoFile);
-  //       setValidPreview(screenshot); // for preview
-  //     }
-  //   }
-  //   setModalVisible(false);
-  // };
-
   const handleSelfieCapture = () => {
     if (!webcamRef.current) return;
     const screenshot = webcamRef.current.getScreenshot();
@@ -214,24 +178,6 @@ const Additionalrequirments: React.FC<AdditionalRequirmentsProps> = ({ loanData,
 
     setGalleryVisible(false);
   };
-
-
-
-
-  /* const handleSelectGalleryImage = (imgUrl: string) => {
-    if (currentUploadType === 'magrow') {
-      setMagrowPreview(imgUrl);
-      setMagrowImage(null); // clear File because using old image
-      setMagrowGalleryImage(imgUrl); // save the gallery URL
-    } else if (currentUploadType === 'valid') {
-      setValidPreview(imgUrl);
-      setValidImage(null); // clear File
-      setValidGalleryImage(imgUrl); // save gallery URL
-    }
-    setGalleryVisible(false); // close modal
-  }; */
-
-
   const saveToLaravel = () => {
     if (!sigCanvas.current || sigCanvas.current.isEmpty()) {
       message.error("No signature found. Please sign first.");

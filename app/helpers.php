@@ -2,6 +2,7 @@
 
 use App\Models\LoanLog;
 use App\Models\PaymentHistory;
+use App\Models\UserImages;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -98,3 +99,22 @@ function HistoryTransaction($cid, $accNo, $request)
             }
         });
 }
+
+function avatar($userid)
+{
+    $user = UserImages::useravatar($userid);
+    $img = 'avatar.jpg';
+    if ($user) {
+        $img = $user->imgavata;
+    }
+    return $img;
+}
+
+
+function humanFileSize($bytes, $decimals = 2)
+    {
+        if ($bytes <= 0) return '0 B';
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $factor = floor(log($bytes, 1024));
+        return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . ' ' . $units[$factor];
+    }

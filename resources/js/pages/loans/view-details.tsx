@@ -1,18 +1,19 @@
 import React, { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { statusColor, AccountingstatusOptions, accpermissionMap, AccstatusOptions, getStatusTag, loanCodeMap, loanTerms, modeMap, permissionMap, statusFilterOptions, statusOptions, tagLabels } from '@/lib/helpers';
-import { Alert, Avatar, Button, ConfigProviderProps, Divider, Drawer, Dropdown, Image, message, Modal, Space, Tag, Timeline } from 'antd';
-import { DownloadOutlined, DownOutlined, UserOutlined } from '@ant-design/icons';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { statusColor, AccountingstatusOptions, accpermissionMap, AccstatusOptions, getStatusTag, loanCodeMap, loanTerms, modeMap, permissionMap, statusOptions, tagLabels } from '@/lib/helpers';
+import { Alert, Avatar, Button, ConfigProviderProps, Divider, Drawer, Dropdown, Image, message, Modal, Space, Table, Tag, Timeline } from 'antd';
+import { DownloadOutlined, DownOutlined, ProfileFilled, ProfileTwoTone, UserOutlined } from '@ant-design/icons';
 import ImageFreeCropModal from '@/lib/ImageFreeCropModal';
 import ImageEasyCropModal from '@/lib/ImageEasyCropModal';
 import '@ant-design/v5-patch-for-react-19';
-import { Crop, Eye, NotebookIcon, NotepadText, Printer } from 'lucide-react';
+import { Crop, Pencil, Printer, User2 } from 'lucide-react';
 import { PDFDocument, rgb } from 'pdf-lib';
 import { saveAs } from 'file-saver'; // optional for nicer file download
 import TextArea from 'antd/es/input/TextArea';
 import UserInformation from '@/components/user/userInformation';
 import { usePermission } from '@/hooks/usePermission';
+import axios from 'axios';
 
 const breadcrumbs = [
     { title: 'Loans', href: '/loan-manager' },
@@ -112,8 +113,20 @@ interface UserType {
     email_verified_at: string;
     status: number
 }
+interface PaymentRecord {
+    cid: number,
+    recid: number,
+    acc_no: number,
+    chd: number,
+    trn: number,
+    trn_desc: string,
+    trn_mode: string,
+    trn_amount: string,
+    balance_amount: string,
+    trn_date: string,
+}
 export default function ViewDetails({ details, documents, img_data, approve_by, checkby, logfile }: Props) {
-    
+
     const { data, post, setData, reset } = useForm({
         reason: '',
         reason_deny: '',
@@ -358,6 +371,56 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
         details.status === 1 &&
         !hasPermission('loan-manager', 'approved') &&
         user.is_admin !== 3; // ✅ don't show success tag for admin
+
+    // level two drawer start
+    const [isLevelTwoOpen, setIsLevelTwoOpen] = useState(false);
+    const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+    const [accountDetails, setAccountDetails] = useState<PaymentRecord[] | null>(null);
+    const openLevelTwo = async (accountNo: string, cid: number) => {
+        setSelectedAccount(accountNo);
+        setIsLevelTwoOpen(true);
+
+        try {
+            const res = await axios.get(`/account-history/${accountNo}/${cid}`);
+            setAccountDetails(res.data);
+        } catch (error) {
+            console.error('Failed to fetch account:', error);
+            setAccountDetails(null);
+        }
+    };
+    const columns = [
+        {
+            title: 'Balance Amount',
+            dataIndex: 'balance_amount',
+            key: 'balance_amount',
+        },
+        {
+            title: 'Transaction Amount',
+            dataIndex: 'trn_amount',
+            key: 'trn_amount',
+            // render: (balance_amount: number) => `₱${balance_amount.toFixed(2)}`,
+        },
+        {
+            title: 'Description',
+            dataIndex: 'trn_desc',
+            key: 'trn_desc',
+        },
+        {
+            title: 'Transaction Date',
+            dataIndex: 'trn_date',
+            key: 'trn_date',
+            render: (date: string) => {
+                const options: Intl.DateTimeFormatOptions = {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                };
+                return new Intl.DateTimeFormat('en-US', options).format(new Date(date));
+            },
+        },
+    ];
+    // level two drawer end
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Loan Details" />
@@ -407,25 +470,18 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
                     </div>
                     <>
                         {hasPermission('members-section', 'edit') && (
-                            <Link href={`/member/${details.user_id}`} className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto">
-                                <svg className="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill=""></path>
-                                </svg>
-                                Edit
+                            <Link href={`/member/${details.user_id}`}>
+                                <Button type="dashed" icon={<Pencil size='14px' />}>
+                                    Edit
+                                </Button>
+
                             </Link>
                         )}
-                        
-                        {/* {hasPermission('members-section', 'view') && ( */}
-                            {user.is_admin !== 0 && (
-                            <button onClick={() => showDrawer(details)} className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"  >
-                                <svg className="fill-current" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M3.5 12C3.5 7.30558 7.30558 3.5 12 3.5C16.6944 3.5 20.5 7.30558 20.5 12C20.5 16.6944 16.6944 20.5 12 20.5C7.30558 20.5 3.5 16.6944 3.5 12ZM12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM11.0991 7.52507C11.0991 8.02213 11.5021 8.42507 11.9991 8.42507H12.0001C12.4972 8.42507 12.9001 8.02213 12.9001 7.52507C12.9001 7.02802 12.4972 6.62507 12.0001 6.62507H11.9991C11.5021 6.62507 11.0991 7.02802 11.0991 7.52507ZM12.0001 17.3714C11.5859 17.3714 11.2501 17.0356 11.2501 16.6214V10.9449C11.2501 10.5307 11.5859 10.1949 12.0001 10.1949C12.4143 10.1949 12.7501 10.5307 12.7501 10.9449V16.6214C12.7501 17.0356 12.4143 17.3714 12.0001 17.3714Z" fill=""></path>
-                                </svg>
-                                View
-                            </button>
-                            )}
-                        {/* )} */}
-                        
+                        {user.is_admin !== 0 && (
+                            <Button onClick={() => showDrawer(details)} type="dashed" icon={<User2 size='14px' />}>
+                                View Profile
+                            </Button>
+                        )}
                     </>
                 </div>
             </div>
@@ -596,7 +652,7 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
 
                             </>
                         )}
-                        
+
                         {(details.status !== 4 && details.check_by > 0) && (
                             <>
                                 {details.acc_status > 0 && (
@@ -646,16 +702,20 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
                                 {formattedDate}
                             </span>
                         </div>
-                        <div className='mt-8 mb-8'>
-                            <Divider>Log File</Divider>
-                        </div>
+                        {user.is_admin > 0 && (
+                            <>
+                                <div className='mt-8 mb-8'>
+                                    <Divider>Log File</Divider>
+                                </div>
 
-                        <Timeline
-                            items={logfile.map((log) => ({
-                                children: <div dangerouslySetInnerHTML={{ __html: log.log_message }} />,
-                                color: statusColor(log.status),
-                            }))}
-                        />
+                                <Timeline
+                                    items={logfile.map((log) => ({
+                                        children: <div dangerouslySetInnerHTML={{ __html: log.log_message }} />,
+                                        color: statusColor(log.status),
+                                    }))}
+                                />
+                            </>
+                        )}
 
                     </div>
                 </div>
@@ -736,7 +796,29 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
                 }
             >
                 {selectedUser && (
-                    <UserInformation user={selectedUser} />
+                    <>
+                        <UserInformation user={selectedUser} openLevelTwo={openLevelTwo} />
+                        <Drawer
+                            title={`Account Details for ${selectedAccount}`}
+                            width={700}
+                            open={isLevelTwoOpen}
+                            onClose={() => {
+                                setIsLevelTwoOpen(false);
+                                setAccountDetails(null); // optional
+                            }}
+                        >
+                            {accountDetails ? (
+                                <Table
+                                    dataSource={accountDetails}
+                                    columns={columns}
+                                    rowKey="id"
+                                    pagination={{ pageSize: 10 }}
+                                />
+                            ) : (
+                                <p>Loading or no data...</p>
+                            )}
+                        </Drawer>
+                    </>
                 )}
             </Drawer>
             <Modal

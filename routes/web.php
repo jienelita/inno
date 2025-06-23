@@ -1,4 +1,6 @@
 <?php
+
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatabaseManagerController;
 use App\Http\Controllers\ImageController;
@@ -30,11 +32,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/verify-otp', [OtpController::class, 'verify'])->name('otp.verify');
         Route::get('/members-balance/{membersId}/{prefixId}', [LoanController::class, 'checkBalance']);
         Route::get('/payment-history', [LoanController::class, 'PaymentHistory']);
-        Route::get('/account-history/{account}/{cid}', [LoanController::class, 'AccountHistory']);
+        Route::get('/file-manager', [UserManagerController::class, 'FileManager']);
     });
 
     Route::middleware(['auth', 'is_admin'])->group(function () {
-        Route::get('user-manager', [UserManagerController::class, 'index']);        
+        Route::get('user-manager', [UserManagerController::class, 'index']);
         Route::get('/role-manager', [RoleManagerController::class, 'index']);
         Route::post('/save-role', [RoleManagerController::class, 'saveRole']);
         Route::get('/list-of-roles/{group_id}', [RoleManagerController::class, 'listofRoles']);
@@ -46,7 +48,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/user-password-update', [UserManagerController::class, 'UpdatePassword']);
         Route::post('/update-role/{roleid}', [RoleManagerController::class, 'updateRole']);
         Route::get('/user-count-role/{role_id}', [RoleManagerController::class, 'CountRoleUser']);
-        
         Route::post('/update-user-database', [UserManagerController::class, 'UpdateUserDatabase']);
         Route::post('/delete-role', [RoleManagerController::class, 'DeleteRole']);
         Route::post('/delete-user', [UserManagerController::class, 'DeleteUser']);
@@ -67,12 +68,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/update-cid/{userId}', [UserManagerController::class, 'UpdateCid']);
         Route::get('/promisory-note/{loanId}', [LoanController::class, 'promisorynote']);
         Route::get('/members-loan/{membersId}', [LoanController::class, 'MembersLoan']);
+        Route::get('/chat-support', [ChatController::class, 'index']);
+        Route::get('/chat/admin-fetch', [ChatController::class, 'adminFetch']);
+        Route::get('/chart/fetch', [DashboardController::class, 'BasicChart']);
+        Route::get('/account/details/{accountno}', [DashboardController::class, 'AccountDetails']);
         
     });
-
+    
+    Route::post('/update-user', [UserManagerController::class, 'UpdateUserPost']);
     Route::get('test', [LoanController::class, 'test']);
     Route::post('update-id-image', [ImageController::class, 'UpdateImage']);
     Route::get('/query', [UserManagerController::class, 'testQuery']);
+    Route::get('/account-history/{account}/{cid}', [LoanController::class, 'AccountHistory']);
+    Route::post('/chat/send', [ChatController::class, 'store']);
+    Route::get('/chat/fetch', [ChatController::class, 'fetch']);
 });
 
 Route::get('/check-cid', function (Request $request) {

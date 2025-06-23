@@ -31,42 +31,48 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-
-        //  dd($request);
+       // dd($request);
         $request->validate([
-            //'email' => 'required|string|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            //'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required'],
         ]);
-
+        $explode = explode(" ", $request['full_name']);
+        if(count($explode) > 1){
+            $fnamne = $explode[0];
+            $lnamne = $explode[1];
+        }else{
+            $fnamne = $explode[0];
+            $lnamne = '';
+        }
         $arr = [
-            "cid" => $request->cid,
-            "email" => $request->email,
-            "first_name" => $request->first_name,
-            "last_name" => $request->last_name,
-            "name" =>  $request->first_name.' '. $request->last_name,
-            "middle_name" => $request->middle_name,
+            "cid" => null,
+            "email" => $request['email'],
+            "first_name" => $fnamne,
+            "last_name" => $lnamne,
+            "name" =>  $request['full_name'],
+            "middle_name" => null,
             "is_admin" => 0,
-            "password" => Hash::make($request->password),
-            "bithdate" => $request->bithdate,
-            "phone_number" => $request->phone_number,
-            "birth_place" => $request->birth_place,
-            "current_address" => $request->current_address,
-            "permanent_address" => $request->permanent_address,
-            "is_active" => 3,
+            "password" => Hash::make($request['password']),
+            "bithdate" => null,
+            "phone_number" => null,
+            "birth_place" => null,
+            "current_address" => null,
+            "permanent_address" => null,
+            "is_active" => 1,
         ];
 
         $user = User::create($arr);
-        if ($request->file) {
-            $imageName = time() . '.' . $request->file->extension();
-            $request->file->move(public_path('images'), $imageName);
-            $arr = [
-                "user_id" => $user->id,
-                "image_name" => $imageName,
-                "image_tag" => 1
-            ];
-            UserImages::create($arr);
-        }
+        // if ($request->file) {
+        //     $imageName = time() . '.' . $request->file->extension();
+        //     $request->file->move(public_path('images'), $imageName);
+        //     $arr = [
+        //         "user_id" => $user->id,
+        //         "image_name" => $imageName,
+        //         "image_tag" => 1
+        //     ];
+        //     UserImages::create($arr);
+        // }
         event(new Registered($user));
 
         Auth::login($user);

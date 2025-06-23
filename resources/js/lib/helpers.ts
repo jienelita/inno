@@ -206,6 +206,21 @@ export const statusFilterOptions = [
     { text: 'Disbursements', value: 5 }
 ];
 
+export const memberFilterOptions = [
+    {
+        text: 'Pending',
+        value: '0',
+    },
+    {
+        value: '1',
+        text: 'Approved',
+    },
+    {
+        value: '2',
+        text: 'Disapproved',
+    }
+];
+
 export const getStatusTag = (status: number): { tagColor: string; statusText: string } => {
     switch (status) {
         case 0:
@@ -313,8 +328,8 @@ export const memberOptions: MenuProps['items'] = [
         key: '2',
         label: 'Disapproved',
     }
-
 ];
+
 export const membertatusTag = (status: number): { tagColor: string; statusText: string } => {
     switch (status) {
         case 0:

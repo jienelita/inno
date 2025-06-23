@@ -3,39 +3,47 @@ import { Head, router, Link, usePage, useForm } from '@inertiajs/react'
 import { type BreadcrumbItem } from '@/types';
 import { Button, Drawer, Dropdown, Input, message, Modal, Space, Table, TableColumnsType, Tag, Tooltip } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
-import { formatDate, formatDateTime, memberOptions, memberStatus, membertatusTag, permissionMemberMap, statusOptions, userStatus } from '@/lib/helpers';
+import { formatDateTime, memberFilterOptions, memberOptions, membertatusTag, permissionMemberMap, userStatus } from '@/lib/helpers';
 import { useState } from 'react';
-import { Eye, PencilIcon, RefreshCcw, RefreshCw } from 'lucide-react';
+import { Eye, PencilIcon, RefreshCw } from 'lucide-react';
 import UserInformation from '@/components/user/userInformation';
 import '@ant-design/v5-patch-for-react-19';
 import type { MenuInfo } from 'rc-menu/lib/interface';
 import { usePermission } from '@/hooks/usePermission';
 import UpdateDatabase from '@/components/user/UpdateDatabase';
-
+import axios from 'axios';
 const breadcrumbs: BreadcrumbItem[] = [
     {
         title: 'Members',
         href: '/members',
     },
 ];
-interface Props {
-    user_list: {
-        user_id: number;
-        cid: number;
-        first_name: string;
-        last_name: string;
-        name: string;
-        bithdate: string;
-        phone_number: string;
-        created_at: string;
-        birth_place: string;
-        current_address: string;
-        permanent_address: string;
-        is_active: number;
-        status: number;
-        email: string;
-        email_verified_at: string;
-    }[];
+
+// interface Props {
+//     user_list: {
+//         current_page: number;
+//         last_page: number;
+//         per_page: number;
+//         total: number;
+//         data: UserList[];
+//     };
+// }
+interface UserList {
+    user_id: number;
+    cid: number;
+    first_name: string;
+    last_name: string;
+    name: string;
+    bithdate: string;
+    phone_number: string;
+    created_at: string;
+    birth_place: string;
+    current_address: string;
+    permanent_address: string;
+    is_active: number;
+    status: number;
+    email: string;
+    email_verified_at: string;
 }
 interface ExpandedDataType {
     key: React.Key;
@@ -90,14 +98,37 @@ type User = {
 type PageProps = {
     auth: {
         user: User;
+        message: string;
     };
 };
+interface PaymentRecord {
+    cid: number,
+    recid: number,
+    acc_no: number,
+    chd: number,
+    trn: number,
+    trn_desc: string,
+    trn_mode: string,
+    trn_amount: string,
+    balance_amount: string,
+    trn_date: string,
+}
+function index() {
 
-function index({ user_list }: Props) {
     const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
     const [open, setOpen] = useState<{ open: boolean; location: number | null }>({ open: false, location: null });
     const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
-    //  const [drawer, setDrawer] = useState<{ open: boolean; location: number | null }>({ open: false, location: null });
+
+    const { user_list } = usePage().props as unknown as {
+        user_list: {
+            data: UserList[];
+            current_page: number;
+            last_page: number;
+            per_page: number;
+            total: number;
+            name: string;
+        };
+    };
 
     const [isDisableModalVisible, setIsDisableModalVisible] = useState(false);
     const [disableReason, setDisableReason] = useState('');
@@ -117,7 +148,8 @@ function index({ user_list }: Props) {
         setOpen({ open: false, location: 0 });
         setSelectedUser(null);
     };
-    const dataSource: DataType[] = user_list.map((user) => ({
+
+    const dataSource: DataType[] = user_list.data.map((user) => ({
         key: user.user_id,
         cid: user.cid,
         user_id: user.user_id,
@@ -136,9 +168,7 @@ function index({ user_list }: Props) {
         status: user.status
     }));
 
-
     const expandColumns: TableColumnsType<ExpandedDataType> = [
-        // { title: 'Birth Place', dataIndex: 'birth_place', key: 'birth_place' },
         { title: 'Current Address', dataIndex: 'current_address', key: 'current_address' },
         { title: 'Permanent Address', dataIndex: 'permanent_address', key: 'permanent_address' },
         {
@@ -259,8 +289,9 @@ function index({ user_list }: Props) {
     const [data, setData] = useState<DataType[]>(dataSource);
 
     const saveCid = (userId: number) => {
-        if (typeof editedCid !== 'string') {
-            //message.warning('N');
+        console.log(editedCid);
+        if (typeof editedCid !== 'number') {
+            message.warning('N');
             setEditingKey(null);
             return;
         }
@@ -270,14 +301,20 @@ function index({ user_list }: Props) {
             { cid: editedCid },
             {
                 preserveScroll: true,
-                onSuccess: () => {
-                    setData((prev) =>
-                        prev.map((item) =>
-                            item.user_id === userId ? { ...item, cid: editedCid } : item
-                        )
-                    );
-                    setEditingKey(null);
-                    message.success('CID updated!');
+                onSuccess: (e) => {
+                    if (e.props.status === 0) {
+                        message.error('Unable to save string, please check your input.');
+                    } else if (e.props.status === 1) {
+                        message.error('CID already exist. Please double check.');
+                    } else {
+                        setData((prev) =>
+                            prev.map((item) =>
+                                item.user_id === userId ? { ...item, cid: editedCid } : item
+                            )
+                        );
+                        setEditingKey(null);
+                        message.success('CID updated!');
+                    }
                 },
                 onError: () => {
                     message.error('Failed to update CID');
@@ -295,7 +332,7 @@ function index({ user_list }: Props) {
             render: (text, record) =>
                 editingKey === record.key && allowedAdmins.includes(user.is_admin) ? (
                     <Input
-                        type="number"
+                        type="text"
                         value={editedCid}
                         style={{ width: '90px' }}
                         onChange={(e) => {
@@ -308,27 +345,32 @@ function index({ user_list }: Props) {
                         autoFocus
                     />
                 ) : (
-                    <span
-                        onClick={() => {
-                            setEditingKey(record.user_id);
-                            setEditedCid(record.cid);
-                        }}
-                        style={{ cursor: 'pointer', color: '#1890ff' }}
-                    >
-                        {text === null ? (
-                            <>NULL</>
-                        ) : (
-                            <>{text}</>
-                        )}
-
-                    </span>
+                    <Tooltip title="Update CID">
+                        <span
+                            onClick={() => {
+                                setEditingKey(record.user_id);
+                                setEditedCid(record.cid);
+                            }}
+                            style={{ cursor: 'pointer', color: '#1890ff' }}
+                        >
+                            {text === null ? (
+                                <>NULL</>
+                            ) : (
+                                <>{text}</>
+                            )}
+                        </span>
+                    </Tooltip>
                 ),
         },
         { title: 'Name', dataIndex: 'name', key: 'name' },
         { title: 'Email', dataIndex: 'email', key: 'email' },
         { title: 'Phone Number', dataIndex: 'phone_number', key: 'phone_number' },
         {
-            title: 'Status', dataIndex: 'status', key: 'status',
+            title: 'Status',
+            dataIndex: 'status',
+            key: 'status',
+            filters: memberFilterOptions,
+            filterSearch: true,
             render: (_, record) => {
                 const { statusText, tagColor } = membertatusTag(record.status);
                 const isDanger = tagColor === 'red';    // Disapproved
@@ -407,9 +449,93 @@ function index({ user_list }: Props) {
         />
     );
 
+    // level two drawer start
+    const [isLevelTwoOpen, setIsLevelTwoOpen] = useState(false);
+    const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
+    const [accountDetails, setAccountDetails] = useState<PaymentRecord[] | null>(null);
+    const openLevelTwo = async (accountNo: string, cid: number) => {
+        setSelectedAccount(accountNo);
+        setIsLevelTwoOpen(true);
+        try {
+            const res = await axios.get(`/account-history/${accountNo}/${cid}`);
+            setAccountDetails(res.data);
+        } catch (error) {
+            console.error('Failed to fetch account:', error);
+            setAccountDetails(null);
+        }
+    };
+    const columnsHistory = [
+        {
+            title: 'Balance Amount',
+            dataIndex: 'balance_amount',
+            key: 'balance_amount',
+        },
+        {
+            title: 'Transaction Amount',
+            dataIndex: 'trn_amount',
+            key: 'trn_amount',
+        },
+        {
+            title: 'Description',
+            dataIndex: 'trn_desc',
+            key: 'trn_desc',
+        },
+        {
+            title: 'Transaction Date',
+            dataIndex: 'trn_date',
+            key: 'trn_date',
+            render: (date: string) => {
+                const options: Intl.DateTimeFormatOptions = {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                };
+                return new Intl.DateTimeFormat('en-US', options).format(new Date(date));
+            },
+        },
+    ];
+    const { get } = useForm();
+    const handleTableChange = (
+        pagination: any,
+        filters: any,
+        _sorter: any,
+        _extra: any
+    ) => {
+        const statusSet = Array.isArray(filters.status) ? filters.status : undefined;
+        const query: Record<string, any> = {
+            page: pagination.current,
+            statusSetData: statusSet,
+            pagesize: pagination.pageSize
+        };
+        const queryString = new URLSearchParams();
+        Object.entries(query)
+            .filter(([_, v]) => v !== undefined && v !== null && v !== '')
+            .forEach(([key, value]) => {
+                if (Array.isArray(value)) {
+                    value.forEach(v => queryString.append(`${key}[]`, v));
+                } else {
+                    queryString.append(key, value);
+                }
+            });
+        get(`/members?${queryString}`, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+            only: ['user_list'], // <-- this should match your Inertia prop key
+        });
+    };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Loans" />
+            <Head title="Members Manager" />
+            {/* we can add header here
+            <div className="px-4 pt-4">
+                <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
+                    <div className="flex items-center order-2 gap-2 grow xl:order-3 xl:justify-end">
+                         
+                    </div>
+                </div>
+            </div>
+            */}
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
                 <div className="border-sidebar-border/70 dark:border-sidebar-border relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border md:min-h-min">
                     <div className="p-4 md:p-4">
@@ -424,8 +550,14 @@ function index({ user_list }: Props) {
                                 },
                             }}
                             dataSource={dataSource}
+                            //dataSource={user_list.data}
                             size="middle"
-                            pagination={{ pageSize: 100 }}
+                            onChange={handleTableChange}
+                            pagination={{
+                                current: user_list.current_page,
+                                pageSize: user_list.per_page,
+                                total: user_list.total,
+                            }}
                         />
 
                     </div>
@@ -446,14 +578,34 @@ function index({ user_list }: Props) {
                 {open.location === 1 ? (
                     <>
                         {selectedUser && (
-                            <UserInformation user={selectedUser} />
+                            <>
+                                <UserInformation user={selectedUser} openLevelTwo={openLevelTwo} />
+                                <Drawer
+                                    title={`Account Details for ${selectedAccount}`}
+                                    width={700}
+                                    open={isLevelTwoOpen}
+                                    onClose={() => {
+                                        setIsLevelTwoOpen(false);
+                                        setAccountDetails(null); // optional
+                                    }}
+                                >
+                                    {accountDetails ? (
+                                        <Table
+                                            dataSource={accountDetails}
+                                            columns={columnsHistory}
+                                            rowKey="id"
+                                            pagination={{ pageSize: 10 }}
+                                        />
+                                    ) : (
+                                        <p>Loading or no data...</p>
+                                    )}
+                                </Drawer>
+                            </>
                         )}
                     </>
                 ) : (
                     <>
-                        {selectedUser && (
-                            <UpdateDatabase userinfo={selectedUser} />
-                        )}
+                        {selectedUser && (<UpdateDatabase userinfo={selectedUser} />)}
                     </>
                 )}
 

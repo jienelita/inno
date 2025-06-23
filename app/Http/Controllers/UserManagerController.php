@@ -13,11 +13,16 @@ use App\Models\User;
 use App\Models\UserImages;
 use App\Models\UserReason;
 use App\Models\UserSession;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Illuminate\Support\Str;
+use Twilio\Rest\Client;
+use Twilio\Http\CurlClient;
 
 class UserManagerController extends Controller
 {
@@ -41,14 +46,134 @@ class UserManagerController extends Controller
     public function updateUser($userid)
     {
         return Inertia::render('user/update-user', [
-            'user_details' => User::find($userid)
+            'user_details' => User::find($userid),
+            'image_name' => avatar($userid),
         ]);
     }
 
-    public function membersList()
+    public function FileManager()
     {
+        $images = UserImages::where('user_id', Auth::user()->id)->get()->map(function ($img) {
+            $path = "images/{$img->image_name}";
+
+            $extension = Str::lower(pathinfo($img->image_name, PATHINFO_EXTENSION));
+            $category = match ($extension) {
+                'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp' => 'Image',
+                'mp3', 'wav', 'aac' => 'Music',
+                'mp4', 'mov', 'avi' => 'Video',
+                'pdf', 'docx', 'txt' => 'Document',
+                default => 'Other',
+            };
+            $sizeInBytes = file_exists($path) ? filesize($path) : 0;
+
+            return [
+                'id' => $img->id,
+                'image_name' => $img->image_name,
+                'image_tag' => $img->image_tag,
+                'created_at' => $img->created_at->toDateTimeString(),
+                'category' => $category,
+                'size' => humanFileSize($sizeInBytes),
+            ];
+        });
+
+        return Inertia::render('user/file-manager', [
+            'user_image' => $images
+        ]);
+    }
+
+    public function UpdateUserPost(Request $request)
+    {
+        if (request()->ajax()) {
+            
+            // $sid = 'ACd7f8f6c5951081ec4a558c13d55584fb';
+            // $token = 'f45c41896a6a9c6c5157d57e013d4ef6';
+
+            // $twilio = new Client($sid, $token);
+
+            $otp = rand(100000, 999999);
+            // $to = '+639970628352';
+
+            // try {
+            //     $message = $twilio->messages->create(
+            //         $to,
+            //         [
+            //             'from' => '+14849228654',
+            //             'body' => "Your verification code is: $otp"
+            //         ]
+            //     );
+            //     echo "OTP sent! SID: " . $message->sid;
+            // } catch (Exception $e) {
+            //     echo "Error: " . $e->getMessage();
+            // }
+
+            // die();
+
+            $request->validate([
+                //'password' => ['required', 'confirmed', Rules\Password::defaults()],
+                "current_address" => ['required'],
+                "permanent_address" => ['required'],
+                "first_name" => ['required'],
+                "last_name" => ['required'],
+                "phone_number" => ['required'],
+                "bithdate" => ['required'],
+                "birth_place" => ['required'],
+                "middle_name" => ['required'],
+            ]);
+
+            if ($request["is_new_member"] == 1) {
+                $cid = NULL;
+            } else {
+                $cid = $request['cid'];
+            }
+
+            $arr = [
+                "current_address" => $request["current_address"],
+                "permanent_address" => $request["permanent_address"],
+                "first_name" => $request["first_name"],
+                "last_name" => $request["last_name"],
+                "phone_number" => $request["phone_number"],
+                "bithdate" => $request["bithdate"],
+                "birth_place" => $request["birth_place"],
+                "name" => $request["first_name"] . ' ' . $request["last_name"] . ' ' . $request["prefix_name"],
+                "middle_name" => $request["middle_name"],
+                "prefix_name" => $request["prefix_name"],
+                "is_active" => 2,
+                "cid" => $cid,
+                "otp" =>  $otp
+            ];
+            User::where('id', $request['user_id'])->update($arr);
+
+            if (isset($_FILES['photo'])) {
+                $files = $_FILES['photo'];
+                $imageName = time() . '.' . pathinfo($files['name'], PATHINFO_EXTENSION);
+                $location = "images/" . $imageName;
+                move_uploaded_file($_FILES['photo']['tmp_name'], $location);
+                $arr = [
+                    "user_id" => $request['user_id'],
+                    "original_name" => $files['name'],
+                    "image_name" => $imageName,
+                    "image_tag" => 1
+                ];
+                UserImages::create($arr);
+            }
+        }
+    }
+
+    public function membersList(Request $request)
+    {
+        $pagesize = 20;
+        if (isset($request['pagesize'])) {
+            $pagesize = $request['pagesize'];
+        }
+        $query =  User::selectraw('users.id as user_id, users.*')->where('is_admin',  0)->where('is_active', 3)->orderBy('id', 'desc');  //orderBy('id', 'asc');
+        if ($request->filled('statusSetData')) {
+            $statuses = is_array($request->statusSetData) ? $request->statusSetData : [$request->statusSetData];
+            $query->whereIn('status', $statuses);
+        }
+        $userlist = $query->paginate($pagesize)->withQueryString();
+
         return Inertia::render('user/index', [
-            'user_list' => User::selectraw('users.id as user_id, users.*')->where('is_admin',  0)->get()
+            'user_list' =>  $userlist
         ]);
     }
 
@@ -174,10 +299,25 @@ class UserManagerController extends Controller
 
     public function UpdateCid($userId, Request $request)
     {
-        $arr = [
-            'cid' => $request['cid']
-        ];
-        User::where('id', $userId)->update($arr);
+        if ($request['cid'] > 0) {
+            //check
+            if (User::where('cid', $request['cid'])->where('id', '!=', $userId)->get()->count() > 0) {
+                return back()->with([
+                    'status' => 1,
+                    'message' => ''
+                ]);
+            } else {
+                $arr = [
+                    'cid' => $request['cid']
+                ];
+                User::where('id', $userId)->update($arr);
+            }
+        } else {
+            return back()->with([
+                'status' => 0,
+                'message' => ''
+            ]);
+        }
     }
 
     public function saveUser(Request $request)
@@ -297,5 +437,5 @@ class UserManagerController extends Controller
         $accNo = trim('1708838');
         $cid = 17093;
         //$this->GeneratePaymentHistory($request);
-    }   
+    }
 }

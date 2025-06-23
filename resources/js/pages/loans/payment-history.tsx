@@ -99,9 +99,9 @@ export default function PaymentHistory({ account }: Props) {
                                         <div className="flex items-center gap-3.5">
                                             {PrefixCode(acc.accid)}
                                             <div className="flex flex-col">
-                                                <a className="text-sm font-medium text-mono hover:text-primary mb-px" href="#">
+                                                <div className="text-sm font-medium text-mono hover:text-primary mb-px">
                                                     {acc.account_no.trim()}-{acc.chd}
-                                                </a>
+                                                </div>
                                                 <span className="text-sm text-secondary-foreground">
                                                     {acc.prefix}
                                                 </span>

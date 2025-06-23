@@ -15,14 +15,16 @@ class DatabaseManagerController extends Controller
 {
     public function index()
     {
-        // User::factory()->count(500)->create();
-        return Inertia::render('database/index', []);
+        return Inertia::render('database/index', [
+            'records' => GeneratedDatabase::orderby('id', 'desc')->first()
+        ]);
     }
 
     public function GenerateDatabase(Request $request)
     {
         BalanceAccount::truncate();
-        User::chunk(100, function ($users) use ($request) {
+        PaymentHistory::truncate();
+        User::where('is_admin', 0)->where('status', 1)->where('is_active', 3)->where('cid', '!=' , null)->chunk(100, function ($users) use ($request) {
             foreach ($users as $data) {
                 $cid = str_pad($data->cid, 6, '0', STR_PAD_LEFT);
                 $members_id = $data->id;
@@ -87,17 +89,13 @@ class DatabaseManagerController extends Controller
             }
         });
         // GeneratedDatabase::delete();
-        $arr = [
-            'total_user' => User::all()->count(),
-            'generate_by' => Auth::user()->id,
-        ];
-        GeneratedDatabase::create($arr);
+        
         $this->GeneratePaymentHistory($request);
     }
 
     private function GeneratePaymentHistory($request)
     {
-        PaymentHistory::truncate();
+        
         BalanceAccount::selectRaw('account_no, cid')->cursor()->each(function ($data) {
             $accountno = $data->account_no;
             DB::connection('sqlsrv')
@@ -121,5 +119,13 @@ class DatabaseManagerController extends Controller
                     PaymentHistory::create($arr);
                 });
         });
+
+        $arr = [
+            'total_user' => User::where('is_admin', 0)->where('status', 1)->where('is_active', 3)->where('cid', '!=' , null)->count(),
+            'total_records_count' => BalanceAccount::count(),
+            'generate_by' => Auth::user()->id,
+        ];
+
+        GeneratedDatabase::create($arr);
     }
 }

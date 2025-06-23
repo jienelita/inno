@@ -37,7 +37,6 @@ class LoanController extends Controller
                     break;
             }
         }
-
         $loan = $query->paginate(20)->withQueryString();
 
         return Inertia::render('loans/index', [
@@ -58,7 +57,6 @@ class LoanController extends Controller
                 }
             });
         }
-
         if ($request->filled('user_id')) {
             $ids = is_array($request->user_id) ? $request->user_id : [$request->user_id];
             $query->whereIn('user_id', $ids);
@@ -95,7 +93,7 @@ class LoanController extends Controller
     }
 
     public function AccountHistory($acountNo, $cid){
-        return response()->json(PaymentHistory::where('acc_no', $acountNo)->where('cid', $cid)->orderby('recid', 'desc')->get());
+        return response()->json(PaymentHistory::where('acc_no', $acountNo)->orderby('recid', 'desc')->get());
     }
 
     public function loanUpdateStatus($statusID, $loanID)

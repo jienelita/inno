@@ -10,7 +10,17 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Database Manager', href: '/database-manager' },
 ];
 
-export default function DatabaseManagerIndex() {
+interface Props {
+    records: Records
+}
+
+type Records = {
+    total_user: number,
+    created_at: string,
+    total_records_count: number,
+}
+
+export default function DatabaseManagerIndex({ records }: Props) {
     const [loading, setLoading] = useState(false);
 
     const handleGenerate = () => {
@@ -30,7 +40,7 @@ export default function DatabaseManagerIndex() {
     };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
+            <Head title="Database Manager" />
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4">
 
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
@@ -40,7 +50,7 @@ export default function DatabaseManagerIndex() {
                                 Last Generate
                             </p>
                             <h4 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-                                Sept. 1, 2024
+                                {formatDate(records.created_at)}
                             </h4>
                             <div className="mt-4 items-end justify-between sm:mt-5">
                                 <p className="text-theme-sm text-gray-700 dark:text-gray-400">
@@ -56,7 +66,7 @@ export default function DatabaseManagerIndex() {
                                 Total Members Generate
                             </p>
                             <h4 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-                                50
+                                {records.total_user}
                             </h4>
                             <div className="mt-4 items-end justify-between sm:mt-5">
                                 <p className="text-theme-sm text-gray-700 dark:text-gray-400">
@@ -69,10 +79,10 @@ export default function DatabaseManagerIndex() {
                     <div className="border-sidebar-border/70 dark:border-sidebar-border relative  overflow-hidden rounded-xl border">
                         <div className="p-4 md:p-4">
                             <p className="text-theme-sm text-gray-700 dark:text-gray-400">
-                                Total Members
+                                Total Payment Transaction History
                             </p>
                             <h4 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-                                55
+                                {records.total_records_count}
                             </h4>
                             <div className="mt-4 items-end justify-between sm:mt-5">
                                 <p className="text-theme-sm text-gray-700 dark:text-gray-400">

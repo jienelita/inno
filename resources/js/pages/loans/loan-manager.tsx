@@ -64,14 +64,13 @@ export default function Index() {
             name: string;
         };
     };
-    
+
     const { data, setData, post, get, processing, reset } = useForm({
         reason: '',
         status: 2,
     });
     const [isDisapproveModalOpen, setIsDisapproveModalOpen] = useState(false);
     const [disapproveReason, setDisapproveReason] = useState('');
-    const [selectedLoanId, setSelectedLoanId] = useState<number | null>(null);
     const handleTableChange: TableProps<LoanRecord>['onChange'] = (pagination, filters, sorter, extra) => {
         let sortField: string | undefined;
         let sortOrder: string | undefined;
@@ -162,9 +161,16 @@ export default function Index() {
             title: 'Applicant',
             dataIndex: 'user_id',
             key: 'applicantId',
-            filters: applicantFilters,
-            filterSearch: true,
-            render: (_: any, record: LoanRecord) => record.name,
+          //  filters: applicantFilters,
+          //  filterSearch: true,
+            render: (_: any, record: LoanRecord) => {
+                return (
+                    <Tooltip title="View loan application">
+                        <Link href={`/loan/view/${record.id}`} className="text-link cursor-auto">{record.name}</Link>
+                    </Tooltip>
+                )
+            }
+
         },
         {
             title: 'Loan Code',
@@ -179,26 +185,26 @@ export default function Index() {
             title: 'Loan Amount',
             dataIndex: 'loan_details',
             key: 'loan_amount',
-            filterSearch: true,
-            filters: Array.from(new Set(loan.data.map(item => {
-                try {
-                    const details = JSON.parse(item.loan_details);
-                    return details.loan_amount;
-                } catch {
-                    return null;
-                }
-            }))).filter(Boolean).map(amount => ({
-                text: `₱ ${parseFloat(amount!).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
-                value: amount!,
-            })),
-            onFilter: (value, record) => {
-                try {
-                    const details = JSON.parse(record.loan_details);
-                    return details.loan_amount.startsWith(value);
-                } catch {
-                    return false;
-                }
-            },
+           // filterSearch: true,
+            // filters: Array.from(new Set(loan.data.map(item => {
+            //     try {
+            //         const details = JSON.parse(item.loan_details);
+            //         return details.loan_amount;
+            //     } catch {
+            //         return null;
+            //     }
+            // }))).filter(Boolean).map(amount => ({
+            //     text: `₱ ${parseFloat(amount!).toLocaleString(undefined, { minimumFractionDigits: 2 })}`,
+            //     value: amount!,
+            // })),
+            // onFilter: (value, record) => {
+            //     try {
+            //         const details = JSON.parse(record.loan_details);
+            //         return details.loan_amount.startsWith(value);
+            //     } catch {
+            //         return false;
+            //     }
+            // },
             render: (loan_details: string) => {
                 const details: LoanDetails = JSON.parse(loan_details);
                 return `₱ ${parseFloat(details.loan_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
@@ -222,7 +228,7 @@ export default function Index() {
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            filters: statusFilterOptions, // e.g. { text: 'Approved', value: 1 }
+            filters: statusFilterOptions,
             filterSearch: true,
             render: (_: any, record: LoanRecord) => {
                 const { statusText, tagColor } = getStatusTag(record.status);
@@ -254,7 +260,7 @@ export default function Index() {
                     items: filteredStatusOptions,
                     onClick: handleMenuClick(record.id),
                 };
-                
+
                 const canShowDropdown =
                     (hasPermission('loan-manager', 'approved') &&
                         hasPermission('loan-manager', 'disapproved')) ||
@@ -271,7 +277,6 @@ export default function Index() {
                     record.status === 1 &&
                     !hasPermission('loan-manager', 'approved') &&
                     user.is_admin !== 3; // ✅ don't show success tag for admin
-
                 return (
                     <>
                         {(filteredStatusOptions?.length ?? 0) > 0 && (
@@ -349,22 +354,26 @@ export default function Index() {
             render: (_: any, record: LoanRecord) => (
                 <>
                     <div className='flex '>
-                        <Link href={`/loan/view/${record.id}`} className="text-link cursor-auto"><Eye className='w-5 h-5 me-2'></Eye></Link>
+                        <Tooltip title="View loan application">
+                            <Link href={`/loan/view/${record.id}`} className="text-link cursor-auto"><Eye className='w-5 h-5 me-2'></Eye></Link>
+                        </Tooltip>
                         {user.is_admin === 3 && (
                             <span className='cursor-pointer'>
-                                <Popconfirm
-                                    title="Delete the loan"
-                                    description="Are you sure you want to delete this loan?"
-                                    onConfirm={() => confirmDelete(record.id)}
-                                    onCancel={cancelDelete}
-                                    okText="Yes"
-                                    cancelText="No"
-                                    placement="topRight"
-                                    disabled={record.status === 1}>
-                                    <Tooltip title={record.status === 1 ? 'Cannot delete approved loan' : ''}>
-                                        <Trash2 className='w-5 h-5 text-amber-800'></Trash2>
-                                    </Tooltip>
-                                </Popconfirm>
+                                <Tooltip title="View">
+                                    <Popconfirm
+                                        title="Delete the loan"
+                                        description="Are you sure you want to delete this loan?"
+                                        onConfirm={() => confirmDelete(record.id)}
+                                        onCancel={cancelDelete}
+                                        okText="Yes"
+                                        cancelText="No"
+                                        placement="topRight"
+                                        disabled={record.status === 1}>
+                                        <Tooltip title={record.status === 1 ? 'Cannot delete approved loan' : ''}>
+                                            <Trash2 className='w-5 h-5 text-amber-800'></Trash2>
+                                        </Tooltip>
+                                    </Popconfirm>
+                                </Tooltip>
                             </span>
                         )}
                     </div>

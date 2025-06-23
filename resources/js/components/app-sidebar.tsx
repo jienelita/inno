@@ -4,9 +4,13 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { BookCheck, BookOpen, Calculator, CalendarClock, Cog, Database, Folder, HandCoins, History, LayoutGrid, List, PiggyBank, Shield, User, UserCog, UserCog2Icon, Users } from 'lucide-react';
+import { Calculator, Cog, Database, Files, HandCoins, History, LayoutGrid, List, MessageCircle, User, UserCog, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 import { usePermission } from '@/hooks/usePermission';
+import { Drawer, FloatButton } from 'antd';
+import { useState } from 'react';
+import { QuestionCircleOutlined } from '@ant-design/icons';
+import MemberChat from './chat/MemberChat';
 
 type User = {
     id: number;
@@ -27,7 +31,6 @@ export function AppSidebar() {
     const { hasPermission } = usePermission();
     const mainNavItems = [
         {
-
             title: 'Dashboard',
             href: '/dashboard',
             icon: LayoutGrid,
@@ -57,6 +60,11 @@ export function AppSidebar() {
                         },
                     ],
                 },
+                {
+                    title: 'File Manager',
+                    href: '/file-manager',
+                    icon: Files,
+                },
             ]
             : []),
 
@@ -64,10 +72,10 @@ export function AppSidebar() {
         // ? [
 
 
-         // ]
+        // ]
         //  : []
         //  ),
-        
+
         ...(hasPermission('members-section', 'view')
             ? [{
                 title: 'Members',
@@ -115,32 +123,68 @@ export function AppSidebar() {
                     href: '/database-manager',
                     icon: Database,
                 },
+                {
+                    title: 'Chat Support',
+                    href: '/chat-support',
+                    icon: MessageCircle,
+                },
             ]
             : []),
+
     ];
 
+    const [open, setOpen] = useState(false);
+    const showMessageChatDrawer = () => {
+        setOpen(true);
+    };
+
+    const onCloseMessageChat = () => {
+        setOpen(false);
+    };
     return (
-        <Sidebar collapsible="icon" variant="inset">
-            <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
-                                <AppLogo />
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarHeader>
+        <>
+            <Sidebar collapsible="icon" variant="inset">
+                <SidebarHeader>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton size="lg" asChild>
+                                <Link href="/dashboard" prefetch>
+                                    <AppLogo />
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarHeader>
 
-            <SidebarContent>
-                <NavMain items={mainNavItems} />
-            </SidebarContent>
+                <SidebarContent>
+                    <NavMain items={mainNavItems} />
+                </SidebarContent>
 
-            <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
-                <NavUser />
-            </SidebarFooter>
-        </Sidebar>
+                <SidebarFooter>
+                    <NavFooter items={footerNavItems} className="mt-auto" />
+                    <NavUser />
+                </SidebarFooter>
+            </Sidebar>
+            {user.is_admin === 0 && (
+                <>
+                    <FloatButton
+                        onClick={showMessageChatDrawer}
+                        icon={<QuestionCircleOutlined />}
+                        type="primary"
+                        style={{ insetInlineEnd: 24 }}
+                        tooltip={<div>Contact Us!</div>} />
+                    <Drawer
+                        title="Magrow Chat Support"
+                        //closable={{ 'aria-label': 'Close Button' }}
+                        onClose={onCloseMessageChat}
+                        placement="right" closable={false}
+                        open={open}
+                        width={400}
+                    >
+                        <MemberChat />
+                    </Drawer>
+                </>
+            )}
+        </>
     );
 }

@@ -1,4 +1,4 @@
-import { Alert, Avatar, Col, Row } from "antd";
+import { Alert, Avatar, Button, Col, Drawer, Row, theme } from "antd";
 import { useEffect, useState } from 'react';
 interface Props {
   user: {
@@ -16,8 +16,9 @@ interface Props {
     email: string;
     email_verified_at: string;
     status: number;
-    
+
   };
+  openLevelTwo: any
 }
 interface UserMoreInfo {
   image_name: string;
@@ -34,9 +35,10 @@ type LoanRecord = {
   is_balance: number;
   chd: number;
   accid: number;
+  cid: number;
 };
 
-export default function UserInformation({ user }: Props) {
+export default function UserInformation({ user, openLevelTwo }: Props) {
   const [moreIfo, setMoreInfo] = useState<UserMoreInfo | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -65,24 +67,24 @@ export default function UserInformation({ user }: Props) {
       } catch (err) {
         setLoanRecords([]);
       } finally {
-        
+
       }
     };
     fetchLoanRecords();
   }, [user.user_id]);
-  
+
   if (loading) return <div>Loading image...</div>;
   const style: React.CSSProperties = { background: 'orange' };
   const style2: React.CSSProperties = { background: '#9FC7FF' };
-  return (
+    return (
     <>
       <Row gutter={[16, 16]}>
         <Col span={7}>
           {loanRecords.map((acc) => (
-            <div style={acc.is_balance === 1 ? style : style2} className="border-sidebar-border/70 dark:border-sidebar-border relative  overflow-hidden rounded-xl border mb-2">
+            <div onClick={() => openLevelTwo(acc.account_no, acc.cid )} key={acc.id} style={acc.is_balance === 1 ? style : style2} className="cursor-pointer border-sidebar-border/70 dark:border-sidebar-border relative  overflow-hidden rounded-xl border mb-2">
               <div className="p-4 md:p-4">
                 <p className="text-theme-sm text-gray-700 dark:text-gray-400">
-                  {acc.prefix} <b>{Number(acc.chd) === 1 && Number(acc.accid) === 51 && ( <><br />(Co-maker) </> )}</b>
+                  {acc.prefix} <b>{/*Number(acc.chd) === 1 && Number(acc.accid) === 51 && (<><br />(Co-maker) </>)*/}</b>
                 </p>
                 <h4 className="text-2xl font-bold text-gray-800 dark:text-white/90">
                   &#8369; {acc.balance}

@@ -35,7 +35,9 @@ class User extends Authenticatable
         "name",
         "otp",
         "is_active",
-        "status"
+        "status",
+        "prefix_name",
+        "phone_number_verified_at"
     ];
 
     /**
@@ -63,16 +65,22 @@ class User extends Authenticatable
     public static function membersCount($status)
     {
         $stat = $status;
-        if($status == 2){
+        if ($status == 2) {
             $stat = 1;
         }
+        
         $query = User::query()->where('status', $stat)->where('is_admin', 0);
-        if ($status == 0) {
+        if ($status == 0 || $status == 2) {
             $query->whereBetween('created_at', [
                 Carbon::now()->startOfMonth(),
                 Carbon::now()->endOfMonth(),
             ]);
         }
         return $query->get();
+    }
+
+    public function chats()
+    {
+        return $this->hasMany(\App\Models\Chat::class);
     }
 }

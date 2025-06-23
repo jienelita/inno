@@ -84,11 +84,7 @@ class UserManagerController extends Controller
     public function UpdateUserPost(Request $request)
     {
         if (request()->ajax()) {
-            
-            // $sid = 'ACd7f8f6c5951081ec4a558c13d55584fb';
-            // $token = 'f45c41896a6a9c6c5157d57e013d4ef6';
-
-            // $twilio = new Client($sid, $token);
+           
 
             $otp = rand(100000, 999999);
             // $to = '+639970628352';

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\DataKey;
 use App\Models\LoanLog;
 use App\Models\PaymentHistory;
 use App\Models\UserImages;
@@ -112,9 +113,31 @@ function avatar($userid)
 
 
 function humanFileSize($bytes, $decimals = 2)
-    {
-        if ($bytes <= 0) return '0 B';
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        $factor = floor(log($bytes, 1024));
-        return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . ' ' . $units[$factor];
-    }
+{
+    if ($bytes <= 0) return '0 B';
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    $factor = floor(log($bytes, 1024));
+    return sprintf("%.{$decimals}f", $bytes / pow(1024, $factor)) . ' ' . $units[$factor];
+}
+
+function semaphoneMessage($post)
+{
+    $ch = curl_init();
+    $string = preg_replace('/\s+/', '', trim($post['number']));
+    $number = str_replace('+63', '0', $string);
+    $parameters = array(
+        'apikey' => DataKey::where('id', 1)->first()->api_key, //Your API KEY
+        'number' => $number,
+        'message' => $post['message'],
+        'sendername' => 'SEMAPHORE'
+    );
+    
+    curl_setopt($ch, CURLOPT_URL, 'https://semaphore.co/api/v4/messages');
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($parameters));    
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $output = curl_exec($ch);
+    curl_close($ch);
+    // print_r($output);
+    // die();
+}

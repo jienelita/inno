@@ -1,9 +1,11 @@
-import { Alert, GetProps, Image, Input, Modal, Typography } from 'antd';
-import { Text } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { Alert, GetProps, Image, Input, message, Modal, Typography } from 'antd';
+import axios from 'axios';
 import { useState } from 'react';
 const { Title } = Typography;
 type Props = {
     data?: {
+        id: number;
         is_active: number;
         status: number;
         phone_number: string
@@ -12,8 +14,10 @@ type Props = {
 };
 type OTPProps = GetProps<typeof Input.OTP>;
 const UserStatus = ({ data, reason }: Props) => {
+    const [otpCode, setOtpCode] = useState('');
+    const [isOTPModalOpen, setOTPModalOpen] = useState(false);
     const onChange: OTPProps['onChange'] = (text) => {
-        console.log('onChange:', text);
+        setOtpCode(text);
     };
 
     const onInput: OTPProps['onInput'] = (value) => {
@@ -24,20 +28,37 @@ const UserStatus = ({ data, reason }: Props) => {
         onChange,
         onInput,
     };
-    const [isOTPModalOpen, setOTPModalOpen] = useState(false);
-
+    
     const showModal = () => {
         setOTPModalOpen(true);
     };
 
-    const handleOk = () => {
-        setOTPModalOpen(false);
+    const handleOk = async () => {
+        try {
+            const response = await axios.post('/verify-otp', {
+                otp: otpCode,
+                userId: data?.id,
+            });
+
+            if (response.data.success) {
+                message.success('OTP Verified!');
+                setOTPModalOpen(false);
+                 router.reload();
+            } else {
+                message.error('Invalid OTP');
+            }
+        } catch (error) {
+            message.error('Something went wrong');
+            console.error(error);
+        }
     };
 
     const handleCancel = () => {
         setOTPModalOpen(false);
     };
+
     if (!data) return <p>No user data found.</p>;
+
     return (
         <>
             {data.is_active !== 1 && data.is_active !== 2 && (
@@ -49,7 +70,7 @@ const UserStatus = ({ data, reason }: Props) => {
                                     <b>Pending Verification.</b> This account is awaiting approval or verification.
                                 </>
                             }
-                                type="warning" />
+                                type="success" />
                         </div>
                     ) : data.status === 2 ? (
                         <div className='pb-3'>
@@ -120,7 +141,12 @@ const UserStatus = ({ data, reason }: Props) => {
                 <div className='text-center mb-15'>
                     <Image src="images/icon/otp.png" preview={false} width={150} className='mb-8' />
                     <div className='clear-both'></div>
-                    <Input.OTP formatter={(str) => str.toUpperCase()} {...sharedProps} />
+                    <Input.OTP
+                        value={otpCode}
+                        onChange={onChange}
+                        formatter={(str) => str.toUpperCase()}
+                        {...sharedProps}
+                    />
                     <Title level={4} className='mt-8'>Check your phone for verification code</Title>
                     <p className='mt-4'>Magrow MPC has sent the code to your mobile number: {data.phone_number}</p>
                     <a href="#" type="primary">Resend code via SMS</a>

@@ -33,6 +33,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/members-balance/{membersId}/{prefixId}', [LoanController::class, 'checkBalance']);
         Route::get('/payment-history', [LoanController::class, 'PaymentHistory']);
         Route::get('/file-manager', [UserManagerController::class, 'FileManager']);
+        Route::post('/verify-otp', [OtpController::class, 'VerifyOtp']);
+        
     });
 
     Route::middleware(['auth', 'is_admin'])->group(function () {
@@ -53,6 +55,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/delete-user', [UserManagerController::class, 'DeleteUser']);
         Route::get('/database-manager', [DatabaseManagerController::class, 'index']);
         Route::post('/generate-database-records', [DatabaseManagerController::class, 'GenerateDatabase']);
+        
     });
 
     Route::middleware(['auth', 'is_admin_or_any'])->group(function () {

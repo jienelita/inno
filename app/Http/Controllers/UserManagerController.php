@@ -84,28 +84,8 @@ class UserManagerController extends Controller
     public function UpdateUserPost(Request $request)
     {
         if (request()->ajax()) {
-           
-
             $otp = rand(100000, 999999);
-            // $to = '+639970628352';
-
-            // try {
-            //     $message = $twilio->messages->create(
-            //         $to,
-            //         [
-            //             'from' => '+14849228654',
-            //             'body' => "Your verification code is: $otp"
-            //         ]
-            //     );
-            //     echo "OTP sent! SID: " . $message->sid;
-            // } catch (Exception $e) {
-            //     echo "Error: " . $e->getMessage();
-            // }
-
-            // die();
-
             $request->validate([
-                //'password' => ['required', 'confirmed', Rules\Password::defaults()],
                 "current_address" => ['required'],
                 "permanent_address" => ['required'],
                 "first_name" => ['required'],
@@ -152,6 +132,11 @@ class UserManagerController extends Controller
                 ];
                 UserImages::create($arr);
             }
+            $post = [
+                'number' => trim($request["phone_number"]),
+                'message' => 'Your Magrow MPC verification code is: '.$otp
+            ];
+            semaphoneMessage($post);
         }
     }
 

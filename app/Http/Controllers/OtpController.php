@@ -39,7 +39,7 @@ class OtpController extends Controller
         // echo '<pre>';
         //         print_r($return);
 
-        return response()->json(['message' => 'OTP sent successfully.', 'body' => ' Please check your email.' ]);
+        return response()->json(['message' => 'OTP sent successfully.', 'body' => ' Please check your email.']);
     }
 
     public function verify(Request $request)
@@ -50,7 +50,7 @@ class OtpController extends Controller
         $user = $request->user();
         $inputCode = $request->code;
         $data = User::where('otp', $inputCode)->where('id', $user->id)->first();
-        
+
         if ($inputCode == $data->otp) {
             $arr = [
                 'email_verified_at' => date('Y-m-d H:i:s'),
@@ -58,8 +58,21 @@ class OtpController extends Controller
             ];
             User::where('id', $user->id)->update($arr);
             return response()->json(['success' => true, 'message' => 'OTP is valid.']);
-
         }
         return response()->json(['success' => false, 'message' => 'Invalid OTP.'], 422);
+    }
+
+    public function VerifyOtp(Request $request)
+    {
+        if (User::where('id', $request['userId'])->where('otp', $request['otp'])->get()->count() > 0) {
+             $arr = [
+                'is_active' => 3,
+                'phone_number_verified_at' => date('Y-m-d H:i:s'),
+            ];
+            User::where('id', $request['userId'])->update($arr);
+            return response()->json(['success' => true]);
+        } else {
+            return response()->json(['success' => false]);
+        }
     }
 }

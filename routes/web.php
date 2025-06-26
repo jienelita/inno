@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ApiController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatabaseManagerController;
@@ -20,7 +21,6 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
-
     Route::post('/loans/delete/{id}', [LoanController::class, 'delete']);
     Route::get('/loan/view/{id}', [LoanController::class, 'viewLoanDetails']);
 
@@ -34,7 +34,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/payment-history', [LoanController::class, 'PaymentHistory']);
         Route::get('/file-manager', [UserManagerController::class, 'FileManager']);
         Route::post('/verify-otp', [OtpController::class, 'VerifyOtp']);
-        
     });
 
     Route::middleware(['auth', 'is_admin'])->group(function () {
@@ -55,7 +54,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/delete-user', [UserManagerController::class, 'DeleteUser']);
         Route::get('/database-manager', [DatabaseManagerController::class, 'index']);
         Route::post('/generate-database-records', [DatabaseManagerController::class, 'GenerateDatabase']);
-        
     });
 
     Route::middleware(['auth', 'is_admin_or_any'])->group(function () {
@@ -75,9 +73,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/chat/admin-fetch', [ChatController::class, 'adminFetch']);
         Route::get('/chart/fetch', [DashboardController::class, 'BasicChart']);
         Route::get('/account/details/{accountno}', [DashboardController::class, 'AccountDetails']);
-        
     });
-    
+
     Route::post('/update-user', [UserManagerController::class, 'UpdateUserPost']);
     Route::get('test', [LoanController::class, 'test']);
     Route::post('update-id-image', [ImageController::class, 'UpdateImage']);
@@ -86,6 +83,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/chat/send', [ChatController::class, 'store']);
     Route::get('/chat/fetch', [ChatController::class, 'fetch']);
 });
+
+// Route::group(['prefix' => 'api'], function () {
+//     Route::post('/login', [ApiController::class, 'login']);
+//     Route::middleware('auth:sanctum')->post('/logout', [ApiController::class, 'logout']);
+//     Route::middleware('auth:sanctum')->get('/user', fn(Request $request) => $request->user());
+// });
 
 Route::get('/check-cid', function (Request $request) {
     $exists = User::where('cid', $request->CID)->exists();

@@ -29,11 +29,14 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $validated = $request->validated();
+        $validated['name'] = $validated['first_name'] . ' ' . $validated['middle_name'] . ', ' . $validated['last_name'] . ', ' . $validated['prefix_name'];
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
+        $request->user()->fill($validated);
+
+        // if ($request->user()->isDirty('email')) {
+        //     $request->user()->email_verified_at = null;
+        // }
 
         $request->user()->save();
 

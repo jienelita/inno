@@ -16,6 +16,13 @@ npm install lodash.debounce --legacy-peer-deps
 composer require twilio/sdk
 composer require barryvdh/laravel-dompdf
 
+composer require laravel/sanctum
+php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
+
+
+php artisan make:middleware SkipCsrfForApi
+
+
 --app account
 lesbethmaea@gmail.com
 Lesbeth28 

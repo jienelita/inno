@@ -69,7 +69,7 @@ const Dashboard = ({ disaproved_res, balance_account, image_name }: Props) => {
                                                 <Avatar size={{ xs: 24, sm: 32, md: 40, lg: 64, xl: 80, xxl: 100 }} src={`/images/${image_name}`} />
                                                 <div className="flex items-center gap-1.5">
                                                     <div className="text-lg leading-5 font-semibold text-mono flex">
-                                                        {user?.name} <Tooltip title="Update"><Link href=''><Pencil size={14} className='mt-1 ms-2' /></Link> </Tooltip>
+                                                        {user?.name}
                                                     </div>
                                                     {user?.email_verified_at !== null && (
                                                         <svg className="text-primary" fill="none" height="16" viewBox="0 0 15 16" width="15" xmlns="http://www.w3.org/2000/svg">
@@ -77,6 +77,9 @@ const Dashboard = ({ disaproved_res, balance_account, image_name }: Props) => {
                                                             </path>
                                                         </svg>
                                                     )}
+                                                    <Tooltip title="Update">
+                                                        <Link href='/settings/profile'><Pencil size={14} className='mt-1 ms-2' /></Link>
+                                                    </Tooltip>
                                                 </div>
                                                 <div className="flex flex-wrap justify-center gap-1 lg:gap-4.5 text-sm">
                                                     <div className="flex gap-1.25 items-center">

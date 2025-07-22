@@ -36,7 +36,7 @@ class DatabaseManagerController extends Controller
                             ->orWhere('RELACC.ACC', 'LIKE', '00%') // Share Capital
                             ->orWhere('RELACC.ACC', 'LIKE', '24%') // ATM - Savings Deposi
                             ->orWhere('RELACC.ACC', 'LIKE', '87%') // Net Cash
-                            ->orWhere('RELACC.ACC', 'LIKE', '79%') // Loan Against Deposit
+                            ->orWhere('RELACC.ACC', 'LIKE', '79%') // Loan Against Deposit LAD
                             ->orWhere('RELACC.ACC', 'LIKE', '51%') // Prov.Diminishing - SL
                             ->orWhere('RELACC.ACC', 'LIKE', '73%'); // All Purpose Loan Cash Advance
                     })

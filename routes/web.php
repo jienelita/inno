@@ -76,7 +76,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::post('/update-user', [UserManagerController::class, 'UpdateUserPost']);
-    Route::get('test', [LoanController::class, 'test']);
+    
     Route::post('update-id-image', [ImageController::class, 'UpdateImage']);
     Route::get('/query', [UserManagerController::class, 'testQuery']);
     Route::get('/account-history/{account}/{cid}', [LoanController::class, 'AccountHistory']);
@@ -89,7 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 //     Route::middleware('auth:sanctum')->post('/logout', [ApiController::class, 'logout']);
 //     Route::middleware('auth:sanctum')->get('/user', fn(Request $request) => $request->user());
 // });
-
+Route::get('test', [LoanController::class, 'test']);
 Route::get('/check-cid', function (Request $request) {
     $exists = User::where('cid', $request->CID)->exists();
     return response()->json(['available' => !$exists]);

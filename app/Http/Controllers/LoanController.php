@@ -14,6 +14,8 @@ use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use Twilio\Rest\Client;
+use Illuminate\Support\Facades\Storage;
 
 class LoanController extends Controller
 {
@@ -88,11 +90,12 @@ class LoanController extends Controller
     public function PaymentHistory()
     {
         return Inertia::render('loans/payment-history', [
-           'account' => BalanceAccount::where('members_id', Auth::user()->id)->get()
+            'account' => BalanceAccount::where('members_id', Auth::user()->id)->get()
         ]);
     }
 
-    public function AccountHistory($acountNo, $cid){
+    public function AccountHistory($acountNo, $cid)
+    {
         return response()->json(PaymentHistory::where('acc_no', $acountNo)->orderby('recid', 'desc')->get());
     }
 
@@ -325,7 +328,7 @@ class LoanController extends Controller
 
         if ($request->magrow_id) {
             $magrow_id = time() . '-magrowId.' . $request->magrow_id->extension();
-            $request->magrow_id->move(public_path('images'), $magrow_id);
+            $request->magrow_id->move(public_path('uploads/loan_docs'), $magrow_id);
             $arr = [
                 "user_id" => Auth::user()->id,
                 "image_name" => $magrow_id,
@@ -339,7 +342,7 @@ class LoanController extends Controller
 
         if ($request->valid_id) {
             $valid_id = time() . '-validId.' . $request->valid_id->extension();
-            $request->valid_id->move(public_path('images'), $valid_id);
+            $request->valid_id->move(public_path('uploads/loan_docs'), $valid_id);
             $arr = [
                 "user_id" => Auth::user()->id,
                 "image_name" => $valid_id,
@@ -353,7 +356,7 @@ class LoanController extends Controller
 
         if ($request->selfie) {
             $selfie = time() . '-selfie.' . $request->selfie->extension();
-            $request->selfie->move(public_path('images'), $selfie);
+            $request->selfie->move(public_path('uploads/loan_docs'), $selfie);
             $arr = [
                 "user_id" => Auth::user()->id,
                 "image_name" => $selfie,
@@ -366,8 +369,8 @@ class LoanController extends Controller
         }
 
         if ($request->signature) {
-            $signature = time() . '-signature.' . $request->signature->extension();
-            $request->signature->move(public_path('images'), $signature);
+             $signature = time() . '-signature.' . $request->signature->extension();
+             $request->signature->move(public_path('uploads/loan_docs'), $signature);
             $arr = [
                 "user_id" => Auth::user()->id,
                 "image_name" => $signature,
@@ -381,7 +384,7 @@ class LoanController extends Controller
 
         if ($request->co_maker_magrow_id) {
             $co_maker_magrow_id = time() . '-co_maker_magrow_id.' . $request->co_maker_magrow_id->extension();
-            $request->co_maker_magrow_id->move(public_path('images'), $co_maker_magrow_id);
+            $request->co_maker_magrow_id->move(public_path('uploads/loan_docs'), $co_maker_magrow_id);
             $arr = [
                 "user_id" => Auth::user()->id,
                 "image_name" => $co_maker_magrow_id,
@@ -395,7 +398,7 @@ class LoanController extends Controller
 
         if ($request->co_maker_valid_id) {
             $co_maker_valid_id = time() . '-co_maker_valid_id.' . $request->co_maker_valid_id->extension();
-            $request->co_maker_valid_id->move(public_path('images'), $co_maker_valid_id);
+            $request->co_maker_valid_id->move(public_path('uploads/loan_docs'), $co_maker_valid_id);
             $arr = [
                 "user_id" => Auth::user()->id,
                 "image_name" => $co_maker_valid_id,
@@ -411,7 +414,7 @@ class LoanController extends Controller
             $count = 1;
             foreach ($request->file('supporting_docs', []) as $file) {
                 $payslip = time() . '-payslip-' . $count++ . '.' . $file->extension();
-                $file->move(public_path('images'), $payslip);
+                $file->move(public_path('uploads/loan_docs'), $payslip);
                 $arr = [
                     "user_id" => Auth::user()->id,
                     "image_name" => $payslip,
@@ -423,17 +426,29 @@ class LoanController extends Controller
                 UserImages::create($arr);
             }
         }
-
-
         //    return to_route('dashboard');
     }
 
     public function test()
     {
-        echo '<pre>';
-        $permission = session()->all();
-        $permissions = $permission['user_role'];
-        print_r($permissions);
+        $sid = "ACd7f8f6c5951081ec4a558c13d55584fb";
+        $token = "f45c41896a6a9c6c5157d57e013d4ef6";
+        $from   = '+14849228654'; // your Twilio number
+        $to     = '+639970628352';          // recipient phone number
+        $body   = 'My test Meesage';        // SMS message
+
+        $client = new Client($sid, $token);
+
+        try {
+            $client->messages->create($to, [
+                'from' => $from,
+                'body' => $body,
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'SMS sent successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()]);
+        }
     }
     private function loadCode($loanCode)
     {
@@ -533,21 +548,7 @@ class LoanController extends Controller
 
         return $string;
     }
-    private function paymentMode($paymentMode)
-    {
-        switch ($paymentMode) {
-            case 1:
-                return 'Weekly';
-            case 2:
-                return 'Semi - monthly';
-            case 3:
-                return 'Monthly';
-            case 4:
-                return 'Quarterly';
-            default:
-                return 'Weekly';
-        };
-    }
+    
     private function Interest($loan_code)
     {
         switch ($loan_code) {

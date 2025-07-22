@@ -17,7 +17,8 @@ class LoanApplication extends Model
         'approve_by',
         'acc_status',
         'reason_deny',
-        'check_by'
+        'check_by',
+        'is_mobile_app'
     ];
 
     public static function LoanDetails()

@@ -131,13 +131,51 @@ function semaphoneMessage($post)
         'message' => $post['message'],
         'sendername' => 'SEMAPHORE'
     );
-    
+
     curl_setopt($ch, CURLOPT_URL, 'https://semaphore.co/api/v4/messages');
     curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($parameters));    
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($parameters));
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $output = curl_exec($ch);
     curl_close($ch);
     // print_r($output);
     // die();
+}
+
+
+function sms88()
+{
+    $curl = curl_init();
+
+    curl_setopt_array($curl, [
+        CURLOPT_URL => "https://sms.8x8.com/api/v1/subaccounts/MagrowMpc_4eED3_hq/messages",
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => "",
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 30,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => "POST",
+        CURLOPT_POSTFIELDS => json_encode([
+            'encoding' => 'AUTO',
+            'track' => null,
+            'text' => 'Your One-Time Password (OTP) is: 874609.',
+            'destination' => '+639970628352'
+        ]),
+        CURLOPT_HTTPHEADER => [
+            "accept: application/json",
+            "authorization: Bearer yfvKEAITmttqJijpRVIpa0AbFVI615IVZWNg8n5XTo",
+            "content-type: application/json"
+        ],
+    ]);
+
+    $response = curl_exec($curl);
+    $err = curl_error($curl);
+
+    curl_close($curl);
+
+    if ($err) {
+        echo "cURL Error #:" . $err;
+    } else {
+        echo $response;
+    }
 }

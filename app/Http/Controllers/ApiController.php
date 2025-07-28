@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BalanceAccount;
+use App\Models\Chat;
 use App\Models\LoanApplication;
 use App\Models\PaymentHistory;
 use Illuminate\Http\Request;
@@ -117,7 +118,7 @@ class ApiController extends Controller
             $signatureFilename = 'signatures/' . uniqid('sig_') . '.png';
             Storage::disk('public')->put($signatureFilename, $signatureBinary);
 
-            $this->writeLog($request->input('loan_data'));
+
 
             // Example insert (customize to your DB schema)
             $loan_details = [
@@ -142,25 +143,66 @@ class ApiController extends Controller
 
             $loan_id = LoanApplication::create($arr)->id;
 
+            //Magrow ID with signature
             $arr = [
                 "user_id" => $loanData['useridData'],
                 "image_name" => str_replace("uploads/loan_docs/", "", $employeeIdPath),
                 "image_tag" => 2,
                 'loan_id' => $loan_id,
                 'show_img' => 0,
-                'image_mapping' => 1
+                'image_mapping' => 1,
+                'original_name' => "Magrow Id"
             ];
-
             UserImages::create($arr);
+
+            //signatureFilename
+            $arr = [
+                "user_id" => $loanData['useridData'],
+                "image_name" => str_replace("signatures/", "", $signatureFilename),
+                "image_tag" => 2,
+                'loan_id' => $loan_id,
+                'show_img' => 0,
+                'image_mapping' => 4,
+                'original_name' => "Signature"
+            ];
+            UserImages::create($arr);
+
+            //selfie
+            $arr = [
+                "user_id" => $loanData['useridData'],
+                "image_name" => str_replace("uploads/loan_docs/", "", $selfiePath),
+                "image_tag" => 2,
+                'loan_id' => $loan_id,
+                'show_img' => 0,
+                'image_mapping' => 3,
+                'original_name' => "Selfie"
+            ];
+            UserImages::create($arr);
+
+            //comaker or valid id
+            if ($loanData['loanform'] > 1) {
+                if ($loanData['loanform'] == 2) {
+                    $imagemap = 6;
+                    $original_name = "Co-maker Id";
+                } else {
+                    $imagemap = 7;
+                    $original_name = "Valid Id";
+                }
+                $arr = [
+                    "user_id" => $loanData['useridData'],
+                    "image_name" => str_replace("uploads/loan_docs/", "", $coMakerIdPath),
+                    "image_tag" => 2,
+                    'loan_id' => $loan_id,
+                    'show_img' => 0,
+                    'image_mapping' => $imagemap,
+                    'original_name' => $original_name
+                ];
+                UserImages::create($arr);
+            }
 
             return response()->json([
                 'message' => 'Loan submitted successfully!',
-                'files' => [
-                    'employee_id' => $employeeIdPath,
-                    'co_maker_id' => $coMakerIdPath,
-                    'selfie' => $selfiePath,
-                    'signature' => $signatureFilename,
-                ]
+                'id' => $loan_id
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -195,5 +237,175 @@ class ApiController extends Controller
     public function myApplications($user_id)
     {
         return LoanApplication::where('user_id', $user_id)->latest()->get();
+    }
+    public function loanInfo($id)
+    {
+        $loan = LoanApplication::with('uploads')->where('id', $id)->first();
+
+        if (!$loan) {
+            return response()->json(['message' => 'Loan not found'], 404);
+        }
+        return response()->json($loan);
+    }
+    public function profile($id)
+    {
+        $user = User::where('id', $id)->first();
+        $image = UserImages::where('user_id', $id)->where('image_tag', 1)->latest()->first();
+
+        return response()->json([
+            'user' => $user,
+            'avatar' => $image ? asset('storage/avatars/' . $image->image_name) : null,
+        ]);
+    }
+    public function UpdateUser(Request $request, $id)
+    {
+
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'email' => "required|email|unique:users,email,$id",
+            'phone_number' => 'nullable|string|max:20',
+            'current_address' => 'nullable|string|max:255',
+            'password' => 'nullable|min:6|confirmed', // optional password update
+
+        ]);
+
+        $this->writeLog(json_encode($request->all()));
+        $otp = rand(100000, 999999);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = User::find($id);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        if ($request->memberType == 'new') {
+            $cid = '';
+        } else {
+            $cid = $request->cid;
+        }
+
+        $user->name = $request->first_name . ' ' . $request->last_name;
+        $user->last_name = $request->last_name;
+        $user->first_name = $request->first_name;
+        $user->email = $request->email;
+        $user->phone_number = $request->phone_number;
+        $user->current_address = $request->current_address;
+
+        if ($request->is_update == 1) {
+            $user->otp = $otp;
+            $user->is_active = 2;
+            if ($request->memberType != 'new') {
+                $user->cid = $cid;
+            }else{
+                $user->cid = null;
+            }
+        }
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+
+        return response()->json(['message' => 'User updated successfully', 'user' => $user]);
+    }
+
+    public function updateAvatar(Request $request, $id)
+    {
+        $user = UserImages::where('user_id', $id)->where('image_tag', 1)->first();
+
+        // if (!$user) {
+        //     return response()->json(['message' => 'User not found.'], 404);
+        // }
+
+        if (!$request->hasFile('avatar')) {
+            return response()->json(['message' => 'No avatar uploaded.'], 400);
+        }
+
+        $file = $request->file('avatar');
+
+        $validated = $request->validate([
+            'avatar' => 'required|image|mimes:jpg,jpeg,png|max:5120', // max 5MB
+        ]);
+
+        // Delete old avatar if needed
+        if ($user->image_name && Storage::disk('public')->exists('avatars/' . $user->image_name)) {
+            Storage::disk('public')->delete('avatars/' . $user->image_name);
+        }
+
+        $filename = 'avatar_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        $file->storeAs('avatars', $filename, 'public');
+
+        $user->image_name = $filename;
+        $user->image_tag = 1;
+        $user->is_mobile_app = 1;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Avatar updated successfully.',
+            'avatar' => asset('storage/avatars/' . $filename),
+        ]);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'otp' => 'required|string|min:6|max:6',
+        ]);
+
+        $user = User::where('id', $request->user_id)
+            ->where('otp', $request->otp)
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Invalid OTP.',
+            ], 400);
+        }
+
+        // If OTP is valid, mark phone as verified
+        User::where('id', $user->id)
+            ->update(
+                [
+                    'phone_number_verified_at' => now(),
+                    'otp' => null,
+                    'is_active' => 3,
+                    'status' => 0
+                ]
+            );
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Phone number verified successfully.',
+        ]);
+    }
+
+    public function ChatStore(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|integer',
+            'message' => 'required|string',
+        ]);
+
+        $msg = Chat::create([
+            'user_id' => $request->user_id,
+            'message' => $request->message,
+        ]);
+
+        return response()->json(['status' => true, 'message' => $msg]);
+    }
+
+    public function ChatFetch($userId)
+    {
+        $messages = Chat::where('user_id', $userId)
+                    ->orWhere('receiver_id', $userId)
+                    ->orderBy('created_at')
+                    ->get();
+        return response()->json($messages);
     }
 }

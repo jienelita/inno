@@ -60,4 +60,9 @@ class LoanApplication extends Model
 
         return $query->get();
     }
+
+    public function uploads()
+    {
+        return $this->hasMany(UserImages::class, 'loan_id');
+    }
 }

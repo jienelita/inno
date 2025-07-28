@@ -52,6 +52,7 @@ interface Props {
         payment_mode: string;
         status: number;
         loan_details: string;
+        is_mobile_app: number;
         [key: string]: any;
         updated_at: string;
         first_name: string;
@@ -137,12 +138,12 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
     const [selectedImage, setSelectedImage] = useState('');
     const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
     const [saving, setSaving] = useState(false);
-    const handleOpenCrop = (doc: Doc) => {
+    const handleOpenCrop = (doc: Doc, is_mobile_app: number) => {
         setSelectedImage(`/images/${doc.image_name}`);
         setSelectedDocId(doc.id);
         setFreeCropVisible(true);
     };
-    const handleOpenEasyCrop = (doc: Doc) => {
+    const handleOpenEasyCrop = (doc: Doc, is_mobile_app: number) => {
         setSelectedImage(`/images/${doc.image_name}`);
         setSelectedDocId(doc.id);
         setEasyCropVisible(true);
@@ -420,7 +421,12 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
         },
     ];
     // level two drawer end
-
+    let LoanDocs = '/images/';
+    let SignatureLocation = '/images/';
+    if (details.is_mobile_app == 1) {
+        LoanDocs = '/uploads/loan_docs/';
+        SignatureLocation = 'storage/signatures/';
+    }
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Loan Details" />
@@ -739,20 +745,26 @@ export default function ViewDetails({ details, documents, img_data, approve_by, 
                                     <h3 className="font-semibold text-gray-700 dark:text-white/90 lg:mb-2">
                                         {tagLabels[doc.image_mapping] ?? 'Other Document'}
                                     </h3>
-                                    <Image width={400} src={`/images/${doc.image_name}`} alt={tagLabels[doc.image_mapping]} />
+
+                                    {doc.image_mapping === 4 ? (
+                                        <Image width={400} src={`/storage/signatures/${doc.image_name}`} alt={tagLabels[doc.image_mapping]} />
+                                    ) : (
+                                        <Image width={400} src={`/uploads/loan_docs/${doc.image_name}`} alt={tagLabels[doc.image_mapping]} />
+                                    )}
+
                                     {/* This section will crop image */}
                                     {hasPermission('loan-manager', 'crop') && (
                                         <>
                                             {doc.image_mapping === 3 ? (
                                                 <Button size="large"
                                                     className="absolute top-2 right-2"
-                                                    onClick={() => handleOpenEasyCrop(doc)} type="primary" shape="circle" icon={<Crop />} />
+                                                    onClick={() => handleOpenEasyCrop(doc, details.is_mobile_app)} type="primary" shape="circle" icon={<Crop />} />
                                             ) : (
                                                 <>
                                                     {doc.image_mapping !== 4 && (
                                                         <Button size="large"
                                                             className="absolute top-0 right-5"
-                                                            onClick={() => handleOpenCrop(doc)} type="primary" shape="circle" icon={<Crop />} />
+                                                            onClick={() => handleOpenCrop(doc, details.is_mobile_app)} type="primary" shape="circle" icon={<Crop />} />
                                                     )}
                                                 </>
                                             )}

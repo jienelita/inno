@@ -309,7 +309,8 @@ class LoanController extends Controller
                 "image_tag" => 2,
                 'loan_id' => $loan_id,
                 'show_img' => 0,
-                'image_mapping' => 6
+                'image_mapping' => 6,
+                 'original_name' => "Co-maker Id"
             ];
             UserImages::create($arr);
         }
@@ -321,7 +322,8 @@ class LoanController extends Controller
                 "image_tag" => 2,
                 'loan_id' => $loan_id,
                 'show_img' => 0,
-                'image_mapping' => 7
+                'image_mapping' => 7,
+                'original_name' => "Valid Id"
             ];
             UserImages::create($arr);
         }
@@ -335,7 +337,8 @@ class LoanController extends Controller
                 "image_tag" => 2,
                 'loan_id' => $loan_id,
                 'show_img' => 1,
-                'image_mapping' => 1
+                'image_mapping' => 1,
+                'original_name' => "Magrow Id"
             ];
             UserImages::create($arr);
         }
@@ -363,21 +366,23 @@ class LoanController extends Controller
                 "image_tag" => 2,
                 'loan_id' => $loan_id,
                 'show_img' => 0,
-                'image_mapping' => 3
+                'image_mapping' => 3,
+                'original_name' => "Selfie"
             ];
             UserImages::create($arr);
         }
 
         if ($request->signature) {
              $signature = time() . '-signature.' . $request->signature->extension();
-             $request->signature->move(public_path('uploads/loan_docs'), $signature);
+             $request->signature->move(public_path('storage/signatures'), $signature);
             $arr = [
                 "user_id" => Auth::user()->id,
                 "image_name" => $signature,
                 "image_tag" => 2,
                 'loan_id' => $loan_id,
                 'show_img' => 0,
-                'image_mapping' => 4
+                'image_mapping' => 4,
+                'original_name' => "Signature"
             ];
             UserImages::create($arr);
         }

@@ -20,6 +20,9 @@ composer require laravel/sanctum
 php artisan vendor:publish --provider="Laravel\Sanctum\SanctumServiceProvider"
 
 
+"intervention/image": "^3.11",
+        "intervention/image-laravel": "^1.5",
+        
 php artisan make:middleware SkipCsrfForApi
 
 

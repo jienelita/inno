@@ -89,7 +89,7 @@ const Additionalrequirments: React.FC<AdditionalRequirmentsProps> = ({ loanData,
       setModalType(null);
     }
   };
-  const galleryImages = gallery?.map(img => `/images/${img.image_name}`) || [];
+  const galleryImages = gallery?.map(img => `/uploads/loan_docs/${img.image_name}`) || [];
 
   const handleUploadChange = (info: any) => {
     const latestFile = info.fileList?.[info.fileList.length - 1]?.originFileObj;
